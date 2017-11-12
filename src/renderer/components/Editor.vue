@@ -221,5 +221,17 @@
 </script>
 
 <style>
+.fill-parent {
+    position: relative;
+    height: 100%;
+    width: 100%;
+}
 
+.full-height {
+    height:80vh;
+}
+
+.section {
+    padding: 0;
+}
 </style>
