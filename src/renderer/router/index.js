@@ -9,8 +9,8 @@ export default new Router({
       path: '/',
       // name: 'editor',
       name: 'landing-page',
-      component: require('@/components/Editor').default
-      // component: require('@/components/LandingPage').default
+      // component: require('@/components/Editor').default
+      component: require('@/components/LandingPage').default
     },
     {
       path: '*',
