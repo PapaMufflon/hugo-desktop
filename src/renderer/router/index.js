@@ -7,10 +7,18 @@ export default new Router({
   routes: [
     {
       path: '/',
-      // name: 'editor',
       name: 'landing-page',
-      // component: require('@/components/Editor').default
-      component: require('@/components/LandingPage').default
+      component: require('@/components/LandingPage').default,
+      children: [
+        {
+          path: '',
+          component: require('@/components/LandingPage/Home').default
+        },
+        {
+          path: 'create',
+          component: require('@/components/LandingPage/Create').default
+        }
+      ]
     },
     {
       path: '*',
