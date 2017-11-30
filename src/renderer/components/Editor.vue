@@ -88,9 +88,6 @@
   const {shell} = require('electron')
   const Vue = require('vue')
   
-  const alsnuffPath = path.join(require('cwd')(), 'alsnuff')
-  const alsnuffPosts = path.join(alsnuffPath, 'content', 'posts')
-
   export default {
     name: 'editor',
     components: { MarkdownHeader, MarkdownImage, MarkdownLink, PostsMenuItem },
@@ -105,8 +102,13 @@
         selectionEnd: 0
       }
     },
+    computed: {
+      blogPostsPath () {
+        return path.join(this.$store.state.Blog.blogPath, 'content', 'post')
+      }
+    },
     created: function () {
-      fs.readdir(alsnuffPosts, (err, files) => {
+      fs.readdir(this.blogPostsPath, (err, files) => {
         if (err) {
           alert('An error ocurred reading the posts' + err.message)
           console.log(err)
@@ -116,7 +118,7 @@
         this.posts = files.map(f => {
           return {
             title: path.basename(f, path.extname(f)),
-            filepath: path.join(alsnuffPosts, f)
+            filepath: path.join(this.blogPostsPath, f)
           }
         })
 
@@ -136,10 +138,12 @@
             return
           }
 
+          const that = this
+
           const makeFilenameMatchContentTitle = function (dataContext) {
             let title = dataContext.content.match(/title: "(.*)"/)[1]
             let filename = sanitize(title).replace(/ /g, '-') + '.md'
-            let filepath = path.join(alsnuffPosts, filename)
+            let filepath = path.join(that.blogPostsPath, filename)
 
             if (dataContext.currentPost.filepath !== filepath) {
               fs.rename(dataContext.currentPost.filepath, filepath, (err) => {
@@ -165,6 +169,10 @@
         })
       },
       currentPost: function (val, oldVal) {
+        if (val === undefined) {
+          return
+        }
+
         fs.readFile(val.filepath, 'utf-8', (err, data) => {
           if (err) {
             alert('An error ocurred reading the file :' + err.message)

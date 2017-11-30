@@ -18,18 +18,18 @@ cloudinary.config({
   api_secret: '12j_t3fV9FubalsBkyQ5i3zXhZ0'
 })
 
-const hugo = require('child_process').execFile
-const cwd = require('cwd')
-const path = require('path')
+// const hugo = require('child_process').execFile
+// const cwd = require('cwd')
+// const path = require('path')
 
-hugo(path.join(cwd(), 'hugo.exe'), ['serve', '-s', 'alsnuff', '-D'], function (err, data) {
-  if (err) {
-    console.error(err)
-    return
-  }
+// hugo(path.join(cwd(), 'hugo.exe'), ['serve', '-s', 'alsnuff', '-D'], function (err, data) {
+//   if (err) {
+//     console.error(err)
+//     return
+//   }
 
-  console.log(data.toString())
-})
+//   console.log(data.toString())
+// })
 
 /* eslint-disable no-new */
 new Vue({

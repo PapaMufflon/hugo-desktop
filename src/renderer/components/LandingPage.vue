@@ -8,7 +8,9 @@
       </div>
     </section>
     
-    <router-view></router-view>
+    <transition name="slide">
+      <router-view></router-view>
+    </transition>
   </div>
 </template>
 
@@ -17,15 +19,23 @@
 
   export default {
     name: 'landing-page',
-    components: { SystemInformation },
-    methods: {
-      open (link) {
-        this.$electron.shell.openExternal(link)
-      }
-    }
+    components: { SystemInformation }
   }
 </script>
 
 <style>
+.slide-enter-active {
+  transition: all .6s ease;
+  transition-delay: .6s;
+}
+.slide-enter {
+  transform: translateX(100vw);
+}
 
+.slide-leave-active {
+  transition: transform .6s ease;
+}
+.slide-leave-to {
+  transform: translateX(-100vw);
+}
 </style>

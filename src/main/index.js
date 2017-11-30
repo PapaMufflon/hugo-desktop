@@ -1,6 +1,6 @@
 'use strict'
 
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, ipcMain, dialog } from 'electron'
 
 /**
  * Set `__static` path to static files in production
@@ -65,3 +65,8 @@ app.on('ready', () => {
   if (process.env.NODE_ENV === 'production') autoUpdater.checkForUpdates()
 })
  */
+
+ipcMain.on('selectDirectory', (event, arg) => {
+  let dir = dialog.showOpenDialog(mainWindow, { properties: ['openDirectory'] })
+  event.sender.send('directory', dir)
+})
