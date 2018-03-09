@@ -44,12 +44,12 @@
                     <div class="navbar-end">
                         <a class="navbar-item" @click="toggleSplitscreen">
                             <span class="icon" style="color: #333;">
-                                <i class="fa fa-lg fa-columns"></i>
+                                <font-awesome-icon :icon="['fas', 'columns']" />
                             </span>
                         </a>
                         <a class="navbar-item" @click="popOutPreview">
                             <span class="icon" style="color: #333;">
-                                <i class="fa fa-lg fa-external-link"></i>
+                                <font-awesome-icon :icon="['fas', 'external-link-alt']" />
                             </span>
                         </a>
                     </div>

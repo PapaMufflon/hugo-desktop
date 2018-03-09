@@ -1,7 +1,7 @@
 <template>
     <a class="navbar-item" @click="insertLink">
         <span class="icon" style="color: #333;">
-            <i class="fa fa-lg fa-link"></i>
+            <font-awesome-icon :icon="['fas', 'link']" />
         </span>
     </a>
 </template>

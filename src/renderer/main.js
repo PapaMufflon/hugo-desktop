@@ -5,7 +5,12 @@ import router from './router'
 import store from './store'
 
 import cloudinary from 'cloudinary'
-import 'font-awesome-webpack'
+
+import fontawesome from '@fortawesome/fontawesome'
+import FontAwesomeIcon from '@fortawesome/vue-fontawesome'
+import solid from '@fortawesome/fontawesome-free-solid'
+import regular from '@fortawesome/fontawesome-free-regular'
+import brands from '@fortawesome/fontawesome-free-brands'
 
 import 'bulma/css/bulma.css'
 
@@ -17,6 +22,9 @@ cloudinary.config({
   api_key: '572887781728817',
   api_secret: '12j_t3fV9FubalsBkyQ5i3zXhZ0'
 })
+
+fontawesome.library.add(solid, regular, brands)
+Vue.component('font-awesome-icon', FontAwesomeIcon)
 
 // const hugo = require('child_process').execFile
 // const cwd = require('cwd')
