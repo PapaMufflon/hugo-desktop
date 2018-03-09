@@ -30,6 +30,8 @@
 
 <script>
   const ipcRenderer = require('electron').ipcRenderer
+  const Store = require('electron-store')
+  const store = new Store()
 
   export default {
     name: 'create',
@@ -90,11 +92,19 @@
 
                   console.log('rewrote config, start hugo and go to the editor')
 
-                  hugo(path.join(cwd(), 'hugo.exe'), ['serve', '-s', blogPath, '-D'], function (err, data) {
-                    if (err) {
-                      console.error(err)
-                    }
+                  var recentBlogs = store.get('recent-blogs')
+
+                  if (recentBlogs === undefined) {
+                    recentBlogs = []
+                  }
+
+                  recentBlogs.push({
+                    title: that.blogName,
+                    subtitle: '',
+                    path: blogPath
                   })
+
+                  store.set('recent-blogs', recentBlogs)
 
                   that.$store.commit('CHANGE_BLOG_PATH', blogPath)
                   that.$router.push({path: '/editor'})

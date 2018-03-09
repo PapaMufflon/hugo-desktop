@@ -3,14 +3,7 @@
       <div class="tile is-vertical is-8">
         <div class="tile">
           <div class="tile is-parent is-vertical">
-            <article class="tile is-child notification is-primary">
-              <p class="title">als nuff</p>
-              <p class="subtitle">Wandern für Geniesser</p>
-            </article>
-            <article class="tile is-child notification is-warning">
-              <p class="title">hugo-desktop blog</p>
-              <p class="subtitle">dog feeding it</p>
-            </article>
+            <recent-blogs />
           </div>
           <div class="tile is-parent">
             <article class="tile is-child notification is-info">
@@ -48,8 +41,11 @@
 </template>
 
 <script>
+  import RecentBlogs from './RecentBlogs'
+
   export default {
-    name: 'home'
+    name: 'home',
+    components: { RecentBlogs }
   }
 </script>
 

@@ -42,6 +42,9 @@
                     </div>
 
                     <div class="navbar-end">
+                        <publish
+                            :content.sync="content">
+                        </publish>
                         <a class="navbar-item" @click="toggleSplitscreen">
                             <span class="icon" style="color: #333;">
                                 <font-awesome-icon :icon="['fas', 'columns']" />
@@ -81,6 +84,7 @@
   import MarkdownImage from './Editor/MarkdownImage'
   import MarkdownLink from './Editor/MarkdownLink'
   import PostsMenuItem from './Editor/PostsMenuItem'
+  import Publish from './Editor/Publish'
 
   const path = require('path')
   const fs = require('fs')
@@ -90,7 +94,7 @@
   
   export default {
     name: 'editor',
-    components: { MarkdownHeader, MarkdownImage, MarkdownLink, PostsMenuItem },
+    components: { MarkdownHeader, MarkdownImage, MarkdownLink, PostsMenuItem, Publish },
     data: function () {
       return {
         content: '',
@@ -108,6 +112,15 @@
       }
     },
     created: function () {
+      const hugo = require('child_process').execFile
+      const cwd = require('cwd')
+
+      hugo(path.join(cwd(), 'hugo.exe'), ['serve', '-s', this.$store.state.Blog.blogPath, '-D'], function (err, data) {
+        if (err) {
+          console.error(err)
+        }
+      })
+
       fs.readdir(this.blogPostsPath, (err, files) => {
         if (err) {
           alert('An error ocurred reading the posts' + err.message)
