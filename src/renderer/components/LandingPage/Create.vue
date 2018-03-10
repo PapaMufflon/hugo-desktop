@@ -69,12 +69,91 @@
 
           console.log(data.toString())
 
-          let themesFolder = path.join(blogPath, 'themes', 'hugo-minimalist-theme')
+          var defaultThemeSubmodule
+          var defaultThemeRepo
+          let relativeThemesFolder = path.join('themes', 'hugo-minimalist-theme')
 
-          git.Clone('https://github.com/digitalcraftsman/hugo-minimalist-theme.git', themesFolder)
+          console.log('initiating repository...')
+
+          git.Repository.init(blogPath, 0)
             .then(function (repo) {
-              console.log('finished cloning, now setting up the config')
+              console.log('repository initiated, adding submodule...')
 
+              return git.Submodule.addSetup(repo, 'https://github.com/digitalcraftsman/hugo-minimalist-theme.git', relativeThemesFolder, 0)
+            })
+            .catch(function (reasonForFailure) {
+              console.log(reasonForFailure)
+            })
+            .then(function (_defaultThemeSubmodule) {
+              console.log('submodule added, now initializing it...')
+              defaultThemeSubmodule = _defaultThemeSubmodule
+
+              return defaultThemeSubmodule.init(0)
+            })
+            .catch(function (reasonForFailure) {
+              console.log(reasonForFailure)
+            })
+            .then(function () {
+              console.log('submodule initiated, now opening it...')
+
+              return defaultThemeSubmodule.open()
+            })
+            .catch(function (reasonForFailure) {
+              console.log(reasonForFailure)
+            })
+            .then(function (_defaultThemeRepo) {
+              console.log('opened it, now fetching history...')
+              defaultThemeRepo = _defaultThemeRepo
+
+              return defaultThemeRepo.fetch('origin', null, null)
+            })
+            .catch(function (reasonForFailure) {
+              console.log(reasonForFailure)
+            })
+            .then(function () {
+              console.log('history fetched, now getting origin/master...')
+
+              return defaultThemeRepo.getReference('origin/master')
+            })
+            .catch(function (reasonForFailure) {
+              console.log(reasonForFailure)
+            })
+            .then(function (reference) {
+              console.log('got origin/master, now getting the head...')
+
+              return reference.peel(git.Object.TYPE.COMMIT)
+            })
+            .catch(function (reasonForFailure) {
+              console.log(reasonForFailure)
+            })
+            .then(function (commit) {
+              console.log('got the head, now creating the master branch with it...')
+
+              return defaultThemeRepo.createBranch('master', commit.id())
+            })
+            .catch(function (reasonForFailure) {
+              console.log(reasonForFailure)
+            })
+            .then(function () {
+              console.log('master branch created, now finalizing...')
+
+              return defaultThemeSubmodule.addFinalize()
+            })
+            .catch(function (reasonForFailure) {
+              console.log(reasonForFailure)
+            })
+            .then(function () {
+              console.log('finalized, now checking out head...')
+
+              return defaultThemeRepo.checkoutBranch('master')
+            })
+            .catch(function (reasonForFailure) {
+              console.log(reasonForFailure)
+            })
+            .then(function () {
+              console.log('head checked out, now setting up the config')
+
+              let themesFolder = path.join(blogPath, relativeThemesFolder)
               let sourceConfig = path.join(themesFolder, 'exampleSite', 'config.toml')
               let destinationConfig = path.join(blogPath, 'config.toml')
 
@@ -110,8 +189,9 @@
                   that.$router.push({path: '/editor'})
                 })
               })
-            }, function (err) {
-              console.error(err)
+            })
+            .catch(function (reasonForFailure) {
+              console.log(reasonForFailure)
             })
         })
       }
