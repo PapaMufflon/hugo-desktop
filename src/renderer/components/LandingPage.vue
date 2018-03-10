@@ -25,15 +25,15 @@
 
 <style>
 .slide-enter-active {
-  transition: all .6s ease;
-  transition-delay: .6s;
+  transition: all .4s ease;
+  transition-delay: .4s;
 }
 .slide-enter {
   transform: translateX(100vw);
 }
 
 .slide-leave-active {
-  transition: transform .6s ease;
+  transition: transform .4s ease;
 }
 .slide-leave-to {
   transform: translateX(-100vw);
