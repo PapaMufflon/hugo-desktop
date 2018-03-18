@@ -69,17 +69,20 @@
 
           console.log(data.toString())
 
+          var blogRepo
           var defaultThemeSubmodule
           var defaultThemeRepo
+          var index
           let relativeThemesFolder = path.join('themes', 'hugo-minimalist-theme')
 
           console.log('initiating repository...')
 
           git.Repository.init(blogPath, 0)
-            .then(function (repo) {
+            .then(function (_blogRepo) {
               console.log('repository initiated, adding submodule...')
+              blogRepo = _blogRepo
 
-              return git.Submodule.addSetup(repo, 'https://github.com/digitalcraftsman/hugo-minimalist-theme.git', relativeThemesFolder, 0)
+              return git.Submodule.addSetup(blogRepo, 'https://github.com/digitalcraftsman/hugo-minimalist-theme.git', relativeThemesFolder, 0)
             })
             .catch(function (reasonForFailure) {
               console.log(reasonForFailure)
@@ -143,7 +146,7 @@
               console.log(reasonForFailure)
             })
             .then(function () {
-              console.log('finalized, now checking out head...')
+              console.log('finalized, now checking out master branch on submodule...')
 
               return defaultThemeRepo.checkoutBranch('master')
             })
@@ -151,47 +154,91 @@
               console.log(reasonForFailure)
             })
             .then(function () {
-              console.log('head checked out, now setting up the config')
+              fs.writeFile(path.join(blogPath, '.gitignore'), 'public', 'utf8', function (err) {
+                if (err) return console.log(err)
 
-              let themesFolder = path.join(blogPath, relativeThemesFolder)
-              let sourceConfig = path.join(themesFolder, 'exampleSite', 'config.toml')
-              let destinationConfig = path.join(blogPath, 'config.toml')
+                console.log('created .gitignore file.')
 
-              fs.mkdirSync(path.join(blogPath, 'content', 'post'))
+                let themesFolder = path.join(blogPath, relativeThemesFolder)
+                let sourceConfig = path.join(themesFolder, 'exampleSite', 'config.toml')
+                let destinationConfig = path.join(blogPath, 'config.toml')
 
-              fs.readFile(sourceConfig, 'utf8', function (err, data) {
-                if (err) {
-                  return console.log(err)
-                }
+                fs.mkdirSync(path.join(blogPath, 'content', 'post'))
 
-                var result = data.replace(/# Remove[\s\S]*\.\."/g, '')
-
-                fs.writeFile(destinationConfig, result, 'utf8', function (err) {
-                  if (err) return console.log(err)
-
-                  console.log('rewrote config, start hugo and go to the editor')
-
-                  var recentBlogs = store.get('recent-blogs')
-
-                  if (recentBlogs === undefined) {
-                    recentBlogs = []
+                fs.readFile(sourceConfig, 'utf8', function (err, data) {
+                  if (err) {
+                    return console.log(err)
                   }
 
-                  recentBlogs.push({
-                    title: that.blogName,
-                    subtitle: '',
-                    path: blogPath
+                  var result = data.replace(/# Remove[\s\S]*\.\."/g, '')
+
+                  fs.writeFile(destinationConfig, result, 'utf8', function (err) {
+                    if (err) return console.log(err)
+
+                    // commit parent repo
+                    blogRepo.refreshIndex()
+                      .then(function (_index) {
+                        index = _index
+                      })
+                      .then(function () {
+                        console.log('adding everything to the index...')
+
+                        // manually add the few files...
+                        return index.addByPath('.gitignore')
+                      })
+                      .then(function () {
+                        return index.addByPath(path.posix.join('archetypes', 'default.md'))
+                      })
+                      .then(function () {
+                        return index.addByPath('config.toml')
+                      })
+                      .catch(function (reasonForFailure) {
+                        console.log(reasonForFailure)
+                      })
+                      .then(function () {
+                        console.log('writing index...')
+
+                        return index.write()
+                      })
+                      .then(function () {
+                        console.log('writing tree...')
+
+                        return index.writeTree()
+                      })
+                      .then(function (oid) {
+                        var author = git.Signature.create('Scott Chacon', 'schacon@gmail.com', 123456789, 60)
+                        var committer = git.Signature.create('Scott A Chacon', 'scott@github.com', 987654321, 90)
+
+                        console.log('creating commit...')
+
+                        return blogRepo.createCommit('HEAD', author, committer, 'message', oid, [])
+                      })
+                      .then(function () {
+                        console.log('everything committed, start hugo and go to the editor')
+
+                        var recentBlogs = store.get('recent-blogs')
+
+                        if (recentBlogs === undefined) {
+                          recentBlogs = []
+                        }
+
+                        recentBlogs.push({
+                          title: that.blogName,
+                          subtitle: '',
+                          path: blogPath
+                        })
+
+                        store.set('recent-blogs', recentBlogs)
+
+                        that.$store.commit('CHANGE_BLOG_PATH', blogPath)
+                        that.$router.push({path: '/editor'})
+                      })
+                      .catch(function (reasonForFailure) {
+                        console.log(reasonForFailure)
+                      })
                   })
-
-                  store.set('recent-blogs', recentBlogs)
-
-                  that.$store.commit('CHANGE_BLOG_PATH', blogPath)
-                  that.$router.push({path: '/editor'})
                 })
               })
-            })
-            .catch(function (reasonForFailure) {
-              console.log(reasonForFailure)
             })
         })
       }
