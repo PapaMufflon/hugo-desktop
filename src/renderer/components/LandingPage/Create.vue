@@ -51,196 +51,75 @@
 
         ipcRenderer.send('selectDirectory')
       },
-      createBlog: function () {
+      async createBlog () {
         const hugo = require('child_process').execFile
         const cwd = require('cwd')
         const path = require('path')
         const git = require('nodegit')
         const fs = require('fs')
+        const util = require('util')
 
-        let that = this
-        let blogPath = path.join(that.directory, that.blogName)
+        const hugoExecFile = util.promisify(hugo)
+        const fsWriteFile = util.promisify(fs.writeFile)
+        const fsReadFile = util.promisify(fs.readFile)
 
-        hugo(path.join(cwd(), 'hugo.exe'), ['new', 'site', blogPath], function (err, data) {
-          if (err) {
-            console.error(err)
-            return
-          }
+        let blogPath = path.join(this.directory, this.blogName)
+        let relativeThemesFolder = path.join('themes', 'hugo-minimalist-theme')
 
-          console.log(data.toString())
+        await hugoExecFile(path.join(cwd(), 'hugo.exe'), ['new', 'site', blogPath])
+        const blogRepo = await git.Repository.init(blogPath, 0)
+        const defaultThemeSubmodule = await git.Submodule.addSetup(blogRepo, 'https://github.com/digitalcraftsman/hugo-minimalist-theme.git', relativeThemesFolder, 0)
+        await defaultThemeSubmodule.init(0)
+        const defaultThemeRepo = await defaultThemeSubmodule.open()
+        await defaultThemeRepo.fetch('origin', null)
+        const reference = await defaultThemeRepo.getReference('origin/master')
+        const commit = await reference.peel(git.Object.TYPE.COMMIT)
+        await defaultThemeRepo.createBranch('master', commit.id())
+        await defaultThemeSubmodule.addFinalize()
+        await defaultThemeRepo.checkoutBranch('master')
+        await fsWriteFile(path.join(blogPath, '.gitignore'), 'public', 'utf8')
 
-          var blogRepo
-          var defaultThemeSubmodule
-          var defaultThemeRepo
-          var index
-          let relativeThemesFolder = path.join('themes', 'hugo-minimalist-theme')
+        let themesFolder = path.join(blogPath, relativeThemesFolder)
+        let sourceConfig = path.join(themesFolder, 'exampleSite', 'config.toml')
 
-          console.log('initiating repository...')
+        fs.mkdirSync(path.join(blogPath, 'content', 'post'))
 
-          git.Repository.init(blogPath, 0)
-            .then(function (_blogRepo) {
-              console.log('repository initiated, adding submodule...')
-              blogRepo = _blogRepo
+        const configData = await fsReadFile(sourceConfig, 'utf8')
 
-              return git.Submodule.addSetup(blogRepo, 'https://github.com/digitalcraftsman/hugo-minimalist-theme.git', relativeThemesFolder, 0)
-            })
-            .catch(function (reasonForFailure) {
-              console.log(reasonForFailure)
-            })
-            .then(function (_defaultThemeSubmodule) {
-              console.log('submodule added, now initializing it...')
-              defaultThemeSubmodule = _defaultThemeSubmodule
+        let result = configData.replace(/# Remove[\s\S]*\.\."/g, '')
+        let destinationConfig = path.join(blogPath, 'config.toml')
 
-              return defaultThemeSubmodule.init(0)
-            })
-            .catch(function (reasonForFailure) {
-              console.log(reasonForFailure)
-            })
-            .then(function () {
-              console.log('submodule initiated, now opening it...')
+        await fsWriteFile(destinationConfig, result, 'utf8')
 
-              return defaultThemeSubmodule.open()
-            })
-            .catch(function (reasonForFailure) {
-              console.log(reasonForFailure)
-            })
-            .then(function (_defaultThemeRepo) {
-              console.log('opened it, now fetching history...')
-              defaultThemeRepo = _defaultThemeRepo
+        const index = await blogRepo.refreshIndex()
 
-              return defaultThemeRepo.fetch('origin', null, null)
-            })
-            .catch(function (reasonForFailure) {
-              console.log(reasonForFailure)
-            })
-            .then(function () {
-              console.log('history fetched, now getting origin/master...')
+        await index.addByPath('.gitignore')
+        await index.addByPath(path.posix.join('archetypes', 'default.md'))
+        await index.addByPath('config.toml')
+        await index.write()
+        const oid = await index.writeTree()
 
-              return defaultThemeRepo.getReference('origin/master')
-            })
-            .catch(function (reasonForFailure) {
-              console.log(reasonForFailure)
-            })
-            .then(function (reference) {
-              console.log('got origin/master, now getting the head...')
+        let author = git.Signature.create('Scott Chacon', 'schacon@gmail.com', 123456789, 60)
+        let committer = git.Signature.create('Scott A Chacon', 'scott@github.com', 987654321, 90)
 
-              return reference.peel(git.Object.TYPE.COMMIT)
-            })
-            .catch(function (reasonForFailure) {
-              console.log(reasonForFailure)
-            })
-            .then(function (commit) {
-              console.log('got the head, now creating the master branch with it...')
+        await blogRepo.createCommit('HEAD', author, committer, 'message', oid, [])
 
-              return defaultThemeRepo.createBranch('master', commit.id())
-            })
-            .catch(function (reasonForFailure) {
-              console.log(reasonForFailure)
-            })
-            .then(function () {
-              console.log('master branch created, now finalizing...')
+        let recentBlogs = store.get('recent-blogs')
 
-              return defaultThemeSubmodule.addFinalize()
-            })
-            .catch(function (reasonForFailure) {
-              console.log(reasonForFailure)
-            })
-            .then(function () {
-              console.log('finalized, now checking out master branch on submodule...')
+        if (recentBlogs === undefined) {
+          recentBlogs = []
+        }
 
-              return defaultThemeRepo.checkoutBranch('master')
-            })
-            .catch(function (reasonForFailure) {
-              console.log(reasonForFailure)
-            })
-            .then(function () {
-              fs.writeFile(path.join(blogPath, '.gitignore'), 'public', 'utf8', function (err) {
-                if (err) return console.log(err)
-
-                console.log('created .gitignore file.')
-
-                let themesFolder = path.join(blogPath, relativeThemesFolder)
-                let sourceConfig = path.join(themesFolder, 'exampleSite', 'config.toml')
-                let destinationConfig = path.join(blogPath, 'config.toml')
-
-                fs.mkdirSync(path.join(blogPath, 'content', 'post'))
-
-                fs.readFile(sourceConfig, 'utf8', function (err, data) {
-                  if (err) {
-                    return console.log(err)
-                  }
-
-                  var result = data.replace(/# Remove[\s\S]*\.\."/g, '')
-
-                  fs.writeFile(destinationConfig, result, 'utf8', function (err) {
-                    if (err) return console.log(err)
-
-                    // commit parent repo
-                    blogRepo.refreshIndex()
-                      .then(function (_index) {
-                        index = _index
-                      })
-                      .then(function () {
-                        console.log('adding everything to the index...')
-
-                        // manually add the few files...
-                        return index.addByPath('.gitignore')
-                      })
-                      .then(function () {
-                        return index.addByPath(path.posix.join('archetypes', 'default.md'))
-                      })
-                      .then(function () {
-                        return index.addByPath('config.toml')
-                      })
-                      .catch(function (reasonForFailure) {
-                        console.log(reasonForFailure)
-                      })
-                      .then(function () {
-                        console.log('writing index...')
-
-                        return index.write()
-                      })
-                      .then(function () {
-                        console.log('writing tree...')
-
-                        return index.writeTree()
-                      })
-                      .then(function (oid) {
-                        var author = git.Signature.create('Scott Chacon', 'schacon@gmail.com', 123456789, 60)
-                        var committer = git.Signature.create('Scott A Chacon', 'scott@github.com', 987654321, 90)
-
-                        console.log('creating commit...')
-
-                        return blogRepo.createCommit('HEAD', author, committer, 'message', oid, [])
-                      })
-                      .then(function () {
-                        console.log('everything committed, start hugo and go to the editor')
-
-                        var recentBlogs = store.get('recent-blogs')
-
-                        if (recentBlogs === undefined) {
-                          recentBlogs = []
-                        }
-
-                        recentBlogs.push({
-                          title: that.blogName,
-                          subtitle: '',
-                          path: blogPath
-                        })
-
-                        store.set('recent-blogs', recentBlogs)
-
-                        that.$store.commit('CHANGE_BLOG_PATH', blogPath)
-                        that.$router.push({path: '/editor'})
-                      })
-                      .catch(function (reasonForFailure) {
-                        console.log(reasonForFailure)
-                      })
-                  })
-                })
-              })
-            })
+        recentBlogs.push({
+          title: this.blogName,
+          subtitle: '',
+          path: blogPath
         })
+
+        store.set('recent-blogs', recentBlogs)
+
+        this.$store.commit('CHANGE_BLOG_PATH', blogPath)
+        this.$router.push({path: '/editor'})
       }
     }
   }

@@ -1,0 +1,13 @@
+2018.03.20
+https://github.com/onmyway133/blog/issues/69
+https://electronjs.org/docs/tutorial/using-native-node-modules
+    install Python 2 (3 not yet supported) to rebuild nodegit
+        Error: Can't find Python executable "C:\Users\tobiaswalter\AppData\Local\Programs\Python\Python36-32\Python.exe", you can set the PYTHON env variable.
+            was because of Python 3.
+        still not working...
+            npm install --global --production windows-build-tools  ' on admin console
+            npm install --global node-gyp  ' on admin console
+            setx PYTHON "%USERPROFILE%\.windows-build-tools\python27\python.exe"
+            .\node_modules\.bin\electron-rebuild.cmd
+
+            ...now it's working :)
