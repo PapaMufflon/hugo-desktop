@@ -81,8 +81,16 @@
 
         let themesFolder = path.join(blogPath, relativeThemesFolder)
         let sourceConfig = path.join(themesFolder, 'exampleSite', 'config.toml')
+        let postsFolder = path.join(blogPath, 'content', 'post')
+        const content = `---
+title: "First post"
+date: ${new Date().toISOString()}
+draft: true
+---
+This is your first post :)`
 
-        fs.mkdirSync(path.join(blogPath, 'content', 'post'))
+        fs.mkdirSync(postsFolder)
+        await fsWriteFile(path.join(postsFolder, 'first-post.md'), content, 'utf8')
 
         const configData = await fsReadFile(sourceConfig, 'utf8')
 
