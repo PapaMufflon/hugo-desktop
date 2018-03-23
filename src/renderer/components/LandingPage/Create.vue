@@ -29,7 +29,8 @@
 </template>
 
 <script>
-  const ipcRenderer = require('electron').ipcRenderer
+  const electron = require('electron')
+  const ipcRenderer = electron.ipcRenderer
   const Store = require('electron-store')
   const store = new Store()
 
@@ -45,92 +46,33 @@
       chooseFolder: function () {
         let that = this
 
-        require('electron').ipcRenderer.on('directory', function (event, message) {
+        ipcRenderer.on('directory', function (event, message) {
           that.directory = message[0]
         })
 
         ipcRenderer.send('selectDirectory')
       },
       async createBlog () {
-        const hugo = require('child_process').execFile
-        const cwd = require('cwd')
-        const path = require('path')
-        const git = require('nodegit')
-        const fs = require('fs')
-        const util = require('util')
+        ipcRenderer.on('blogCreated', (event, blogPath) => {
+          let recentBlogs = store.get('recent-blogs')
 
-        const hugoExecFile = util.promisify(hugo)
-        const fsWriteFile = util.promisify(fs.writeFile)
-        const fsReadFile = util.promisify(fs.readFile)
+          if (recentBlogs === undefined) {
+            recentBlogs = []
+          }
 
-        let blogPath = path.join(this.directory, this.blogName)
-        let relativeThemesFolder = path.join('themes', 'hugo-minimalist-theme')
+          recentBlogs.push({
+            title: this.blogName,
+            subtitle: '',
+            path: blogPath
+          })
 
-        await hugoExecFile(path.join(cwd(), 'hugo.exe'), ['new', 'site', blogPath])
-        const blogRepo = await git.Repository.init(blogPath, 0)
+          store.set('recent-blogs', recentBlogs)
 
-        const defaultThemeSubmodule = await git.Submodule.addSetup(blogRepo, 'https://github.com/digitalcraftsman/hugo-minimalist-theme.git', relativeThemesFolder, 0)
-        await defaultThemeSubmodule.init(0)
-        const defaultThemeRepo = await defaultThemeSubmodule.open()
-        await defaultThemeRepo.fetch('origin', null)
-        const reference = await defaultThemeRepo.getReference('origin/master')
-        const commit = await reference.peel(git.Object.TYPE.COMMIT)
-        await defaultThemeRepo.createBranch('master', commit.id())
-        await defaultThemeSubmodule.addFinalize()
-        await defaultThemeRepo.checkoutBranch('master')
-
-        await fsWriteFile(path.join(blogPath, '.gitignore'), 'public', 'utf8')
-        let themesFolder = path.join(blogPath, relativeThemesFolder)
-        let sourceConfig = path.join(themesFolder, 'exampleSite', 'config.toml')
-        let postsFolder = path.join(blogPath, 'content', 'post')
-        const content = `---
-title: "First post"
-date: ${new Date().toISOString()}
-draft: true
----
-This is your first post :)`
-
-        fs.mkdirSync(postsFolder)
-        await fsWriteFile(path.join(postsFolder, 'first-post.md'), content, 'utf8')
-
-        const configData = await fsReadFile(sourceConfig, 'utf8')
-        const newConfigData = configData
-          .replace(/# Remove[\s\S]*\.\."/g, '')
-          .replace(/header_title = "Customizable header title"/g, `header_title = "${this.blogName}"`)
-
-        let destinationConfig = path.join(blogPath, 'config.toml')
-
-        await fsWriteFile(destinationConfig, newConfigData, 'utf8')
-
-        const index = await blogRepo.refreshIndex()
-
-        await index.addByPath('.gitignore')
-        await index.addByPath(path.posix.join('archetypes', 'default.md'))
-        await index.addByPath('config.toml')
-        await index.write()
-        const oid = await index.writeTree()
-
-        let author = git.Signature.create('Scott Chacon', 'schacon@gmail.com', 123456789, 60)
-        let committer = git.Signature.create('Scott A Chacon', 'scott@github.com', 987654321, 90)
-
-        await blogRepo.createCommit('HEAD', author, committer, 'message', oid, [])
-
-        let recentBlogs = store.get('recent-blogs')
-
-        if (recentBlogs === undefined) {
-          recentBlogs = []
-        }
-
-        recentBlogs.push({
-          title: this.blogName,
-          subtitle: '',
-          path: blogPath
+          this.$store.commit('CHANGE_BLOG_PATH', blogPath)
+          this.$router.push({path: '/editor'})
         })
 
-        store.set('recent-blogs', recentBlogs)
-
-        this.$store.commit('CHANGE_BLOG_PATH', blogPath)
-        this.$router.push({path: '/editor'})
+        ipcRenderer.send('createBlog', { directory: this.directory, name: this.blogName })
       }
     }
   }
