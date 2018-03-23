@@ -1,3 +1,22 @@
+backlog
+    set up repository
+        create gh-pages branch
+    log in to GitHub
+    finish setting up repository (https://gohugo.io/hosting-and-deployment/hosting-on-github/#preparations-for-gh-pages-branch)
+        set upstream (to already existing new repo on GitHub)
+        push gh-pages branch to upstream
+        set upstream/gh-pages branch as public folder on master
+        commit & push to upstream
+    create new repo in GitHub
+    spinner when creating new blog
+    use monaco editor (https://github.com/Microsoft/monaco-editor)
+    settings page for blog
+        change title
+        access template
+
+
+dev log
+
 2018.03.20
 https://github.com/onmyway133/blog/issues/69
 https://electronjs.org/docs/tutorial/using-native-node-modules
