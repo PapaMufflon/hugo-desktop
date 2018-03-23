@@ -68,6 +68,7 @@
 
         await hugoExecFile(path.join(cwd(), 'hugo.exe'), ['new', 'site', blogPath])
         const blogRepo = await git.Repository.init(blogPath, 0)
+
         const defaultThemeSubmodule = await git.Submodule.addSetup(blogRepo, 'https://github.com/digitalcraftsman/hugo-minimalist-theme.git', relativeThemesFolder, 0)
         await defaultThemeSubmodule.init(0)
         const defaultThemeRepo = await defaultThemeSubmodule.open()
@@ -77,8 +78,8 @@
         await defaultThemeRepo.createBranch('master', commit.id())
         await defaultThemeSubmodule.addFinalize()
         await defaultThemeRepo.checkoutBranch('master')
-        await fsWriteFile(path.join(blogPath, '.gitignore'), 'public', 'utf8')
 
+        await fsWriteFile(path.join(blogPath, '.gitignore'), 'public', 'utf8')
         let themesFolder = path.join(blogPath, relativeThemesFolder)
         let sourceConfig = path.join(themesFolder, 'exampleSite', 'config.toml')
         let postsFolder = path.join(blogPath, 'content', 'post')
@@ -93,11 +94,13 @@ This is your first post :)`
         await fsWriteFile(path.join(postsFolder, 'first-post.md'), content, 'utf8')
 
         const configData = await fsReadFile(sourceConfig, 'utf8')
+        const newConfigData = configData
+          .replace(/# Remove[\s\S]*\.\."/g, '')
+          .replace(/header_title = "Customizable header title"/g, `header_title = "${this.blogName}"`)
 
-        let result = configData.replace(/# Remove[\s\S]*\.\."/g, '')
         let destinationConfig = path.join(blogPath, 'config.toml')
 
-        await fsWriteFile(destinationConfig, result, 'utf8')
+        await fsWriteFile(destinationConfig, newConfigData, 'utf8')
 
         const index = await blogRepo.refreshIndex()
 
