@@ -33,6 +33,7 @@
                         </markdown-link>
 
                         <markdown-image
+                            :currentPost="currentPost"
                             :content.sync="content"
                             :selection-start="selectionStart"
                             :selection-end="selectionEnd"
