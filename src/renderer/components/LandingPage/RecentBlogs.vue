@@ -10,6 +10,8 @@
 </template>
 
 <script>
+  import { CHANGE_BLOG_PATH } from './../../store/mutation-types'
+  
   const Store = require('electron-store')
   const store = new Store()
 
@@ -24,12 +26,12 @@
       var x = store.get('recent-blogs')
 
       if (x !== undefined) {
-        this.recentBlogs = x.reverse()
+        this.recentBlogs = x.reverse().slice(0, 3)
       }
     },
     methods: {
       openBlog: function (blog) {
-        this.$store.commit('CHANGE_BLOG_PATH', blog.path)
+        this.$store.commit(CHANGE_BLOG_PATH, blog.path)
         this.$router.push({path: '/editor'})
       }
     }

@@ -1,0 +1,1 @@
+export const CHANGE_BLOG_PATH = 'CHANGE_BLOG_PATH'
