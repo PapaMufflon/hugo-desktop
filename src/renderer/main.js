@@ -26,19 +26,6 @@ cloudinary.config({
 fontawesome.library.add(solid, regular, brands)
 Vue.component('font-awesome-icon', FontAwesomeIcon)
 
-// const hugo = require('child_process').execFile
-// const cwd = require('cwd')
-// const path = require('path')
-
-// hugo(path.join(cwd(), 'hugo.exe'), ['serve', '-s', 'alsnuff', '-D'], function (err, data) {
-//   if (err) {
-//     console.error(err)
-//     return
-//   }
-
-//   console.log(data.toString())
-// })
-
 /* eslint-disable no-new */
 new Vue({
   components: { App },
