@@ -29,7 +29,7 @@
 </template>
 
 <script>
-  import { CHANGE_BLOG_PATH } from './../../store/mutation-types'
+  import { CHANGE_CURRENT_BLOG } from './../../store/mutation-types'
 
   const electron = require('electron')
   const ipcRenderer = electron.ipcRenderer
@@ -70,7 +70,7 @@
 
           store.set('recent-blogs', recentBlogs)
 
-          this.$store.commit(CHANGE_BLOG_PATH, blogPath)
+          this.$store.commit(CHANGE_CURRENT_BLOG, blogPath)
           this.$router.push({path: '/editor'})
         })
 

@@ -108,14 +108,14 @@
     },
     computed: {
       blogPostsPath () {
-        return path.join(this.$store.state.Blog.blogPath, 'content', 'post')
+        return path.join(this.$store.state.BlogCollection.currentBlogPath, 'content', 'post')
       }
     },
     created: function () {
       const hugo = require('child_process').execFile
       const cwd = require('cwd')
 
-      hugo(path.join(cwd(), 'hugo.exe'), ['serve', '-s', this.$store.state.Blog.blogPath, '-D'], function (err, data) {
+      hugo(path.join(cwd(), 'hugo.exe'), ['serve', '-s', this.$store.state.BlogCollection.currentBlogPath, '-D'], function (err, data) {
         if (err) {
           console.error(err)
         }
