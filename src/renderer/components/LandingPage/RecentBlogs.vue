@@ -12,9 +12,6 @@
 <script>
   import { CHANGE_CURRENT_BLOG } from './../../store/mutation-types'
 
-  const Store = require('electron-store')
-  const store = new Store()
-
   export default {
     name: 'recent-blogs',
     data: function () {
@@ -23,11 +20,7 @@
       }
     },
     created: function () {
-      var x = store.get('recent-blogs')
-
-      if (x !== undefined) {
-        this.recentBlogs = x.reverse().slice(0, 3)
-      }
+      this.recentBlogs = this.$store.getters.recentBlogs(3)
     },
     methods: {
       openBlog: function (blog) {

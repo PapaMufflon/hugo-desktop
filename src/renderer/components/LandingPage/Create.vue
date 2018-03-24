@@ -33,8 +33,6 @@
 
   const electron = require('electron')
   const ipcRenderer = electron.ipcRenderer
-  const Store = require('electron-store')
-  const store = new Store()
 
   export default {
     name: 'create',
@@ -56,20 +54,6 @@
       },
       async createBlog () {
         ipcRenderer.on('blogCreated', (event, blogPath) => {
-          let recentBlogs = store.get('recent-blogs')
-
-          if (recentBlogs === undefined) {
-            recentBlogs = []
-          }
-
-          recentBlogs.push({
-            title: this.blogName,
-            subtitle: '',
-            path: blogPath
-          })
-
-          store.set('recent-blogs', recentBlogs)
-
           this.$store.commit(CHANGE_CURRENT_BLOG, blogPath)
           this.$router.push({path: '/editor'})
         })

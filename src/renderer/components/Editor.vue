@@ -85,6 +85,8 @@
   import MarkdownLink from './Editor/MarkdownLink'
   import PostsMenuItem from './Editor/PostsMenuItem'
   import Publish from './Editor/Publish'
+  
+  import { BLOG_OPENED } from './../store/mutation-types'
 
   const path = require('path')
   const fs = require('fs')
@@ -136,6 +138,12 @@
         })
 
         this.currentPost = this.posts[0]
+      })
+
+      this.$store.commit(BLOG_OPENED, {
+        title: path.basename(this.$store.state.BlogCollection.currentBlogPath),
+        subtitle: '',
+        path: this.$store.state.BlogCollection.currentBlogPath
       })
     },
     watch: {

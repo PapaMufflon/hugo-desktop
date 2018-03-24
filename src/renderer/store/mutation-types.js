@@ -1,1 +1,2 @@
 export const CHANGE_CURRENT_BLOG = 'CHANGE_CURRENT_BLOG'
+export const BLOG_OPENED = 'BLOG_OPENED'
