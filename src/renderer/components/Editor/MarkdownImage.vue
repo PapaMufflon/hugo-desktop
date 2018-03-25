@@ -16,6 +16,8 @@ export default {
   props: ['currentPost', 'content', 'selection-start', 'selection-end'],
   methods: {
     insertImage: function () {
+      const that = this
+
       dialog.showOpenDialog((fileNames) => {
         if (fileNames === undefined) {
           console.log('No file selected')
@@ -23,7 +25,7 @@ export default {
         }
 
         let fileName = fileNames[0]
-        let publicId = this.currentPost.title + '/' + path.basename(fileName, path.extname(fileName))
+        let publicId = that.currentPost.title + '/' + path.basename(fileName, path.extname(fileName))
 
         cloudinary.v2.uploader.upload(fileName, {public_id: publicId}, (error, result) => {
           if (error) {

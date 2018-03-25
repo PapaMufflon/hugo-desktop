@@ -1,5 +1,5 @@
 backlog
-    limit recently used blogs to 3
+    word count
     log in to GitHub
     finish setting up repository (https://gohugo.io/hosting-and-deployment/hosting-on-github/#preparations-for-gh-pages-branch)
         set upstream (to already existing new repo on GitHub)
