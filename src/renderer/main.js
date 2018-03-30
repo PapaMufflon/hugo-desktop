@@ -5,6 +5,7 @@ import router from './router'
 import store from './store'
 
 import cloudinary from 'cloudinary'
+import cloudinaryConfig from './config'
 
 import fontawesome from '@fortawesome/fontawesome'
 import FontAwesomeIcon from '@fortawesome/vue-fontawesome'
@@ -18,9 +19,9 @@ if (!process.env.IS_WEB) Vue.use(require('vue-electron'))
 Vue.config.productionTip = false
 
 cloudinary.config({
-  cloud_name: 'alsnuff',
-  api_key: '572887781728817',
-  api_secret: '12j_t3fV9FubalsBkyQ5i3zXhZ0'
+  cloud_name: cloudinaryConfig.cloud_name,
+  api_key: cloudinaryConfig.api_key,
+  api_secret: cloudinaryConfig.api_secret
 })
 
 fontawesome.library.add(solid, regular, brands)
