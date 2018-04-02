@@ -1,17 +1,24 @@
 backlog
     word count
+        add status bar
+    read baseurl of config to show correct site
     log in to GitHub
     finish setting up repository (https://gohugo.io/hosting-and-deployment/hosting-on-github/#preparations-for-gh-pages-branch)
         set upstream (to already existing new repo on GitHub)
-        push gh-pages branch to upstream
+             git remote add origin https://github.com/PapaMufflon/The-hugo-desktop-blog.git
+        push gh-pages branch to origin
         set upstream/gh-pages branch as public folder on master
         commit & push to upstream
     create new repo in GitHub
     spinner when creating new blog
     use monaco editor (https://github.com/Microsoft/monaco-editor)
     settings page for blog
-        change title
+        change title, baseurl
         access template
+    spinner for image upload in status bar
+    dao ui for image handling (markdown too cryptic)
+
+
 
 
 dev log
