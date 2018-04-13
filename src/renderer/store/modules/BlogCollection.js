@@ -19,7 +19,7 @@ function removeDuplicateBlogData (blogDatas) {
 }
 
 function loadRecentBlogs () {
-  let blogDatas = store.get('recent-blogs')
+  let blogDatas = store.get('recent-blogs') || []
   removeDuplicateBlogData(blogDatas)
   return blogDatas
 }
