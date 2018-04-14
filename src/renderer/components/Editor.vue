@@ -63,14 +63,11 @@
         <div class="section main">
             <div class="columns is-gapless">
                 <div :class="[{'is-half': showPreview}, 'column', 'full-height']">
-                    <textarea
-                        id="source"
-                        class="fill-parent"
-                        autofocus
-                        v-model="content"
-                        @keyup="setSelectionStartAndEnd"
-                        @click="setSelectionStartAndEnd">
-                    </textarea>
+                    <div
+                      id="editor"
+                      class="fill-parent"
+                      autofocus>
+                    </div>
                 </div>
                 <div class="column is-half full-height" v-if="showPreview">
                     <webview class="fill-parent" src="http://localhost:1313/"></webview>
@@ -94,7 +91,71 @@
   const sanitize = require('sanitize-filename')
   const {shell} = require('electron')
   const Vue = require('vue')
+  const hugo = require('child_process').execFile
+  const cwd = require('cwd')
   
+  function startHugo (blogPath) {
+    hugo(path.join(cwd(), 'hugo.exe'), ['serve', '-s', blogPath, '-D'], function (err, data) {
+      if (err) {
+        console.error(err)
+      }
+    })
+  }
+
+  function loadMonacoEditor (thisEditor) {
+    const nodeRequire = global.require
+
+    const loaderScript = document.createElement('script')
+
+    loaderScript.onload = () => {
+      const amdRequire = global.require
+      global.require = nodeRequire
+
+      var path = require('path')
+
+      function uriFromPath (_path) {
+        var pathName = path.resolve(_path).replace(/\\/g, '/')
+
+        if (pathName.length > 0 && pathName.charAt(0) !== '/') {
+          pathName = '/' + pathName
+        }
+
+        return encodeURI('file://' + pathName)
+      }
+
+      amdRequire.config({
+        baseUrl: uriFromPath(path.join(__dirname, '../../../node_modules/monaco-editor/dev'))
+      })
+
+      // workaround monaco-css not understanding the environment
+      self.module = undefined
+
+      // workaround monaco-typescript not understanding the environment
+      self.process.browser = true
+
+      amdRequire(['vs/editor/editor.main'], function () {
+        const editorContainer = document.getElementById('editor')
+        thisEditor.editor = this.monaco.editor.create(editorContainer)
+
+        function updateDimensions () {
+          thisEditor.editor.layout()
+        }
+
+        window.addEventListener('resize', updateDimensions.bind(this))
+
+        thisEditor.editorModel = this.monaco.editor.createModel(thisEditor.content, 'markdown')
+        thisEditor.editorModel.onDidChangeContent(e => {
+          thisEditor.content = thisEditor.editorModel.getValue()
+        })
+
+        thisEditor.editor.setModel(thisEditor.editorModel)
+      })
+    }
+
+    loaderScript.setAttribute('src', '../node_modules/monaco-editor/dev/vs/loader.js')
+    document.body.appendChild(loaderScript)
+  }
+
   export default {
     name: 'editor',
     components: { MarkdownHeader, MarkdownImage, MarkdownLink, PostsMenuItem, Publish },
@@ -106,7 +167,9 @@
         renaming: false,
         showPreview: true,
         selectionStart: 0,
-        selectionEnd: 0
+        selectionEnd: 0,
+        editor: {},
+        editorModel: undefined
       }
     },
     computed: {
@@ -115,14 +178,8 @@
       }
     },
     created: function () {
-      const hugo = require('child_process').execFile
-      const cwd = require('cwd')
-
-      hugo(path.join(cwd(), 'hugo.exe'), ['serve', '-s', this.$store.state.BlogCollection.currentBlogPath, '-D'], function (err, data) {
-        if (err) {
-          console.error(err)
-        }
-      })
+      startHugo(this.$store.state.BlogCollection.currentBlogPath)
+      loadMonacoEditor(this)
 
       fs.readdir(this.blogPostsPath, (err, files) => {
         if (err) {
@@ -201,7 +258,11 @@
             return
           }
 
-          this.content = data
+          if (this.editorModel) {
+            this.editorModel.setValue(data)
+          } else {
+            this.content = data
+          }
         })
       }
     },
