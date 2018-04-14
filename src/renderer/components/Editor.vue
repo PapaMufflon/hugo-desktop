@@ -19,15 +19,13 @@
                         </posts-menu-item>
                         
                         <markdown-header
-                            :content.sync="content"
-                            :selection-start="selectionStart"
-                            :selection-end="selectionEnd">
+                            :editor="editor"
+                            :monaco="monaco">
                         </markdown-header>
 
                         <markdown-link
                             :content.sync="content"
-                            :selection-start="selectionStart"
-                            :selection-end="selectionEnd"
+                            :selection="selection"
                             @change-caret-position="updateCaretPosition"
                             @text-area-focus-wtf="textAreaFocusWtf">
                         </markdown-link>
@@ -35,8 +33,7 @@
                         <markdown-image
                             :currentPost="currentPost"
                             :content.sync="content"
-                            :selection-start="selectionStart"
-                            :selection-end="selectionEnd"
+                            :selection="selection"
                             @change-caret-position="updateCaretPosition"
                             @text-area-focus-wtf="textAreaFocusWtf">
                         </markdown-image>
@@ -90,7 +87,6 @@
   const fs = require('fs')
   const sanitize = require('sanitize-filename')
   const {shell} = require('electron')
-  const Vue = require('vue')
   const hugo = require('child_process').execFile
   const cwd = require('cwd')
   
@@ -134,6 +130,8 @@
       self.process.browser = true
 
       amdRequire(['vs/editor/editor.main'], function () {
+        thisEditor.monaco = this.monaco
+
         const editorContainer = document.getElementById('editor')
         thisEditor.editor = this.monaco.editor.create(editorContainer)
 
@@ -146,6 +144,10 @@
         thisEditor.editorModel = this.monaco.editor.createModel(thisEditor.content, 'markdown')
         thisEditor.editorModel.onDidChangeContent(e => {
           thisEditor.content = thisEditor.editorModel.getValue()
+        })
+
+        thisEditor.editor.onDidChangeCursorSelection(e => {
+          thisEditor.selection = e.selection
         })
 
         thisEditor.editor.setModel(thisEditor.editorModel)
@@ -166,8 +168,8 @@
         currentPost: '',
         renaming: false,
         showPreview: true,
-        selectionStart: 0,
-        selectionEnd: 0,
+        selection: {},
+        monaco: {},
         editor: {},
         editorModel: undefined
       }
@@ -206,6 +208,10 @@
     },
     watch: {
       content: function (val, oldVal) {
+        if (this.editorModel && this.editorModel.getValue() !== val) {
+          this.editorModel.setValue(val)
+        }
+
         if (this.renaming) {
           return
         }
@@ -282,29 +288,11 @@
 
         shell.openExternal('http://localhost:1313/')
       },
-      setSelectionStartAndEnd: function () {
-        let sourceElement = document.getElementById('source')
-
-        this.selectionStart = sourceElement.selectionStart
-        this.selectionEnd = sourceElement.selectionEnd
-      },
-      updateCaretPosition: function (newVal) {
-        let sourceElement = document.getElementById('source')
-
-        function setCaretPosition () {
-          if (sourceElement === document.activeElement) {
-            sourceElement.selectionEnd = newVal
-            console.log('set caret position')
-          } else {
-            console.log('waiting...')
-            Vue.nextTick(setCaretPosition)
-          }
-        }
-
-        setCaretPosition()
+      updateCaretPosition: function (newPosition) {
+        this.editor.setPosition(newPosition)
       },
       textAreaFocusWtf: function () {
-        let sourceElement = document.getElementById('source')
+        let sourceElement = document.getElementById('editor')
         sourceElement.focus()
       }
     }
