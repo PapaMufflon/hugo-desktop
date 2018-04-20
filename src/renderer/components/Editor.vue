@@ -24,16 +24,13 @@
                         </markdown-header>
 
                         <markdown-link
-                            :content.sync="content"
-                            :selection="selection"
-                            @change-caret-position="updateCaretPosition"
+                            :editor="editor"
                             @text-area-focus-wtf="textAreaFocusWtf">
                         </markdown-link>
 
                         <markdown-image
                             :currentPost="currentPost"
                             :editor="editor"
-                            @change-caret-position="updateCaretPosition"
                             @text-area-focus-wtf="textAreaFocusWtf">
                         </markdown-image>
                     </div>
