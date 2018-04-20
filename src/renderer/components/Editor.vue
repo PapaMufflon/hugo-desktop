@@ -32,8 +32,7 @@
 
                         <markdown-image
                             :currentPost="currentPost"
-                            :content.sync="content"
-                            :selection="selection"
+                            :editor="editor"
                             @change-caret-position="updateCaretPosition"
                             @text-area-focus-wtf="textAreaFocusWtf">
                         </markdown-image>
