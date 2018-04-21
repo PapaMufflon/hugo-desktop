@@ -14,7 +14,7 @@
 <script>
   export default {
     name: 'markdown-header',
-    props: ['editor', 'monaco'],
+    props: ['editor'],
     data: function () {
       return {
         lastUsedHeader: 1
@@ -27,7 +27,7 @@
         }
 
         const currentSelection = this.editor.getSelection()
-        const currentSelectedText = this.editor.getModel().getValueInRange(currentSelection)
+        const currentLineText = this.editor.getModel().getLineContent(currentSelection.startLineNumber)
 
         function getCurrentHeaderLevel (s) {
           let level = 0
@@ -40,20 +40,31 @@
           return level
         }
 
-        const currentHeaderLevel = getCurrentHeaderLevel(currentSelectedText)
+        const currentHeaderLevel = getCurrentHeaderLevel(currentLineText)
         const headerTextStart = currentHeaderLevel === 0 ? 0 : currentHeaderLevel + 1
-        const textWithoutHeaderFormat = currentSelectedText.slice(headerTextStart)
+        const textWithoutHeaderFormat = currentLineText.slice(headerTextStart)
         const result = '#'.repeat(desiredLevel) + ' ' + textWithoutHeaderFormat
 
         this.editor.executeEdits('MarkdownHeader', [
-          { range: currentSelection, text: result }
+          {
+            range: {
+              startLineNumber: currentSelection.startLineNumber,
+              startColumn: 0,
+              endLineNumber: currentSelection.startLineNumber,
+              endColumn: this.editor.getModel().getLineMaxColumn(currentSelection.startLineNumber)
+            },
+            text: result
+          }
         ], [
-          new this.monaco.Selection(
-            currentSelection.selectionStartLineNumber + desiredLevel - headerTextStart,
-            currentSelection.selectionStartColumn,
-            currentSelection.positionLineNumber + desiredLevel - headerTextStart,
-            currentSelection.positionColumn)
+          {
+            selectionStartLineNumber: currentSelection.selectionStartLineNumber,
+            selectionStartColumn: currentSelection.selectionStartColumn + desiredLevel - headerTextStart + 1,
+            positionLineNumber: currentSelection.selectionStartLineNumber,
+            positionColumn: currentSelection.positionColumn + desiredLevel - headerTextStart + 1
+          }
         ])
+
+        this.editor.focus()
       }
     }
   }
