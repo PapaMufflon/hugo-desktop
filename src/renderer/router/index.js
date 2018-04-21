@@ -17,6 +17,10 @@ export default new Router({
         {
           path: 'create',
           component: require('@/components/LandingPage/Create').default
+        },
+        {
+          path: 'open',
+          component: require('@/components/LandingPage/Open').default
         }
       ]
     },

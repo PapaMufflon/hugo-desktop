@@ -41,7 +41,7 @@ async function createThemeSubmodule (blogRepo, relativeThemesFolder) {
 }
 
 async function createDefaultPost (blogPath) {
-  const postsFolder = path.join(blogPath, 'content', 'post')
+  const postsFolder = path.join(blogPath, 'content', 'posts')
   const content = `---
 title: "First post"
 date: ${new Date().toISOString()}

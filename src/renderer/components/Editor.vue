@@ -171,7 +171,7 @@
     },
     computed: {
       blogPostsPath () {
-        return path.join(this.$store.state.BlogCollection.currentBlogPath, 'content', 'post')
+        return path.join(this.$store.state.BlogCollection.currentBlogPath, 'content', 'posts')
       }
     },
     created: function () {

@@ -5,13 +5,18 @@
           <div class="tile is-parent is-vertical">
             <recent-blogs />
           </div>
-          <div class="tile is-parent">
+          <div class="tile is-parent is-vertical">
             <article class="tile is-child notification is-info">
               <router-link to="/create">
                 <p class="title">Create</p>
                 <figure class="image is-4by3">
                   <img src="~@/assets/start-a-new-blog.png">
                 </figure>
+              </router-link>
+            </article>
+            <article class="tile is-child notification is-info">
+              <router-link to="/open">
+                <p class="title">Open existing</p>
               </router-link>
             </article>
           </div>
