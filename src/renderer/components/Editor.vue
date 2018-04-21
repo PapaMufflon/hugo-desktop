@@ -179,25 +179,27 @@
       startHugo(this.$store.state.BlogCollection.currentBlogPath)
       loadMonacoEditor(this)
 
-      fs.readdir(this.blogPostsPath, (err, files) => {
-        if (err) {
-          alert('An error ocurred reading the posts' + err.message)
-          console.log(err)
-          return
-        }
-
-        this.posts = files.map(f => {
-          return {
-            title: path.basename(f, path.extname(f)),
-            filepath: path.join(this.blogPostsPath, f)
+      if (this.$route.query.posts !== undefined) {
+        this.posts = this.$route.query.posts
+        this.currentPost = this.$route.query.post
+      } else {
+        fs.readdir(this.blogPostsPath, (err, files) => {
+          if (err) {
+            alert('An error ocurred reading the posts' + err.message)
+            console.log(err)
+            return
           }
-        })
 
-        this.currentPost =
-          this.$route.query.post === undefined
-            ? this.posts[0]
-            : this.$route.query.post
-      })
+          this.posts = files.map(f => {
+            return {
+              title: path.basename(f, path.extname(f)),
+              filepath: path.join(this.blogPostsPath, f)
+            }
+          })
+
+          this.currentPost = this.posts[0]
+        })
+      }
 
       this.$store.commit(BLOG_OPENED, {
         title: path.basename(this.$store.state.BlogCollection.currentBlogPath),

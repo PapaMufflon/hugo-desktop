@@ -3,13 +3,13 @@
     <h1 class="title">Posts</h1>
     <div class="columns is-multiline">
 
-      <div class="column is-12-tablet is-6-desktop is-4-widescreen" v-for="post in posts" :key="post.title">
+      <div class="column is-12" v-for="post in posts" :key="post.title">
         <article class="box">
           <div class="media">
             <aside class="media-left has-text-centered">
               <img src="file://C:/src/hugo-desktop/alsnuff/static/images/Wasserfall-Val-d-Efra.jpg" width="80">
               <br>
-              <span class="tag is-warning">Draft</span>
+              <span class="tag is-warning" v-if="post.draft">Draft</span>
             </aside>
             <div class="media-content">
               <p class="title is-5 is-marginless">
@@ -18,15 +18,14 @@
               <div class="subtitle is-marginless">
                 <span class="tag is-primary">Bergwandern</span>
               </div>
-              <div class="blog-tags">
-                <span class="tag">Tessin</span>
-                <span class="tag">leicht-mittel</span>
+              <div class="blog-tags" v-for="tag in post.tags" :key="tag">
+                <span class="tag">{{tag}}</span>
               </div>
               <p class="content is-small">
                 <a @click="openPost(post)">Edit</a>
                 <span>·</span>
                 <a>Delete</a>
-                <span class="is-pulled-right">Last edited 20.04.2018</span>
+                <span class="is-pulled-right">Last edited {{post.date.toLocaleDateString()}}</span>
               </p>
             </div>
           </div>
@@ -38,6 +37,8 @@
 </template>
 
 <script>
+  import frontmatter from './../frontmatter.js'
+
   const path = require('path')
   const fs = require('fs')
 
@@ -61,19 +62,38 @@
           return
         }
 
-        this.posts = files.map(f => {
-          return {
-            title: path.basename(f, path.extname(f)),
-            filepath: path.join(this.blogPostsPath, f)
-          }
-        })
+        files.forEach(f => {
+          fs.readFile(path.join(this.blogPostsPath, f), 'utf-8', (err, data) => {
+            if (err) {
+              alert('An error ocurred reading the file :' + err.message)
+              return
+            }
 
-        this.currentPost = this.posts[0]
+            const start = data.indexOf('---')
+            const end = data.indexOf('---', start + 1)
+            const details = frontmatter.parse(data.substring(start + 3, end))
+
+            this.posts.push({
+              title: details.title,
+              date: details.date,
+              draft: details.draft,
+              tags: details.tags,
+              titleImage: details.titleImage,
+              filepath: path.join(this.blogPostsPath, f)
+            })
+          })
+        })
       })
     },
     methods: {
       openPost: function (post) {
-        this.$router.push({path: '/editor', query: { post: post }})
+        this.$router.push({
+          path: '/editor',
+          query: {
+            post: post,
+            posts: this.posts
+          }
+        })
       }
     }
   }
