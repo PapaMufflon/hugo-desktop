@@ -25,7 +25,7 @@
     methods: {
       openBlog: function (blog) {
         this.$store.commit(CHANGE_CURRENT_BLOG, blog.path)
-        this.$router.push({path: '/editor'})
+        this.$router.push({path: '/content'})
       }
     }
   }

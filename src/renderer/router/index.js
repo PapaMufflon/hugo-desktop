@@ -25,6 +25,10 @@ export default new Router({
       ]
     },
     {
+      path: '/content',
+      component: require('@/components/Content').default
+    },
+    {
       path: '/editor',
       component: require('@/components/Editor').default
     },

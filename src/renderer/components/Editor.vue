@@ -134,7 +134,8 @@
           thisEditor.editor.layout()
         }
 
-        window.addEventListener('resize', updateDimensions.bind(this))
+        window.addEventListener('resize', updateDimensions)
+        editorContainer.addEventListener('resize', updateDimensions)
 
         thisEditor.editorModel = this.monaco.editor.createModel(thisEditor.content, 'markdown')
         thisEditor.editorModel.onDidChangeContent(e => {
@@ -192,7 +193,10 @@
           }
         })
 
-        this.currentPost = this.posts[0]
+        this.currentPost =
+          this.$route.query.post === undefined
+            ? this.posts[0]
+            : this.$route.query.post
       })
 
       this.$store.commit(BLOG_OPENED, {
@@ -277,6 +281,7 @@
       },
       toggleSplitscreen: function () {
         this.showPreview = !this.showPreview
+        this.editor.layout()
       },
       popOutPreview: function () {
         this.showPreview = false
