@@ -19,26 +19,16 @@
                         </posts-menu-item>
                         
                         <markdown-header
-                            :content.sync="content"
-                            :selection-start="selectionStart"
-                            :selection-end="selectionEnd">
+                            :editor="editor">
                         </markdown-header>
 
                         <markdown-link
-                            :content.sync="content"
-                            :selection-start="selectionStart"
-                            :selection-end="selectionEnd"
-                            @change-caret-position="updateCaretPosition"
-                            @text-area-focus-wtf="textAreaFocusWtf">
+                            :editor="editor">
                         </markdown-link>
 
                         <markdown-image
                             :currentPost="currentPost"
-                            :content.sync="content"
-                            :selection-start="selectionStart"
-                            :selection-end="selectionEnd"
-                            @change-caret-position="updateCaretPosition"
-                            @text-area-focus-wtf="textAreaFocusWtf">
+                            :editor="editor">
                         </markdown-image>
                     </div>
 
@@ -63,14 +53,11 @@
         <div class="section main">
             <div class="columns is-gapless">
                 <div :class="[{'is-half': showPreview}, 'column', 'full-height']">
-                    <textarea
-                        id="source"
-                        class="fill-parent"
-                        autofocus
-                        v-model="content"
-                        @keyup="setSelectionStartAndEnd"
-                        @click="setSelectionStartAndEnd">
-                    </textarea>
+                    <div
+                      id="editor"
+                      class="fill-parent"
+                      autofocus>
+                    </div>
                 </div>
                 <div class="column is-half full-height" v-if="showPreview">
                     <webview class="fill-parent" src="http://localhost:1313/"></webview>
@@ -93,8 +80,79 @@
   const fs = require('fs')
   const sanitize = require('sanitize-filename')
   const {shell} = require('electron')
-  const Vue = require('vue')
+  const hugo = require('child_process').execFile
+  const cwd = require('cwd')
   
+  function startHugo (blogPath) {
+    console.log('starting serving ' + blogPath)
+
+    hugo(path.join(cwd(), 'hugo.exe'), ['serve', '-s', blogPath, '-D'], function (err, data) {
+      if (err) {
+        console.error(err)
+      }
+    })
+  }
+
+  function loadMonacoEditor (thisEditor) {
+    const nodeRequire = global.require
+
+    const loaderScript = document.createElement('script')
+
+    loaderScript.onload = () => {
+      const amdRequire = global.require
+      global.require = nodeRequire
+
+      var path = require('path')
+
+      function uriFromPath (_path) {
+        var pathName = path.resolve(_path).replace(/\\/g, '/')
+
+        if (pathName.length > 0 && pathName.charAt(0) !== '/') {
+          pathName = '/' + pathName
+        }
+
+        return encodeURI('file://' + pathName)
+      }
+
+      amdRequire.config({
+        baseUrl: uriFromPath(path.join(__dirname, '../../../node_modules/monaco-editor/dev'))
+      })
+
+      // workaround monaco-css not understanding the environment
+      self.module = undefined
+
+      // workaround monaco-typescript not understanding the environment
+      self.process.browser = true
+
+      amdRequire(['vs/editor/editor.main'], function () {
+        thisEditor.monaco = this.monaco
+
+        const editorContainer = document.getElementById('editor')
+        thisEditor.editor = this.monaco.editor.create(editorContainer)
+
+        function updateDimensions () {
+          thisEditor.editor.layout()
+        }
+
+        window.addEventListener('resize', updateDimensions.bind(this))
+
+        thisEditor.editorModel = this.monaco.editor.createModel(thisEditor.content, 'markdown')
+        thisEditor.editorModel.onDidChangeContent(e => {
+          thisEditor.content = thisEditor.editorModel.getValue()
+        })
+
+        thisEditor.editor.onDidChangeCursorSelection(e => {
+          thisEditor.selection = e.selection
+        })
+
+        thisEditor.editor.setModel(thisEditor.editorModel)
+      })
+    }
+
+    loaderScript.setAttribute('src', '../node_modules/monaco-editor/dev/vs/loader.js')
+    document.body.appendChild(loaderScript)
+  }
+
   export default {
     name: 'editor',
     components: { MarkdownHeader, MarkdownImage, MarkdownLink, PostsMenuItem, Publish },
@@ -105,8 +163,10 @@
         currentPost: '',
         renaming: false,
         showPreview: true,
-        selectionStart: 0,
-        selectionEnd: 0
+        selection: {},
+        monaco: {},
+        editor: {},
+        editorModel: undefined
       }
     },
     computed: {
@@ -115,14 +175,8 @@
       }
     },
     created: function () {
-      const hugo = require('child_process').execFile
-      const cwd = require('cwd')
-
-      hugo(path.join(cwd(), 'hugo.exe'), ['serve', '-s', this.$store.state.BlogCollection.currentBlogPath, '-D'], function (err, data) {
-        if (err) {
-          console.error(err)
-        }
-      })
+      startHugo(this.$store.state.BlogCollection.currentBlogPath)
+      loadMonacoEditor(this)
 
       fs.readdir(this.blogPostsPath, (err, files) => {
         if (err) {
@@ -149,6 +203,10 @@
     },
     watch: {
       content: function (val, oldVal) {
+        if (this.editorModel && this.editorModel.getValue() !== val) {
+          this.editorModel.setValue(val)
+        }
+
         if (this.renaming) {
           return
         }
@@ -201,7 +259,11 @@
             return
           }
 
-          this.content = data
+          if (this.editorModel) {
+            this.editorModel.setValue(data)
+          } else {
+            this.content = data
+          }
         })
       }
     },
@@ -221,30 +283,11 @@
 
         shell.openExternal('http://localhost:1313/')
       },
-      setSelectionStartAndEnd: function () {
-        let sourceElement = document.getElementById('source')
-
-        this.selectionStart = sourceElement.selectionStart
-        this.selectionEnd = sourceElement.selectionEnd
+      updateCaretPosition: function (newPosition) {
+        this.editor.setPosition(newPosition)
       },
-      updateCaretPosition: function (newVal) {
-        let sourceElement = document.getElementById('source')
-
-        function setCaretPosition () {
-          if (sourceElement === document.activeElement) {
-            sourceElement.selectionEnd = newVal
-            console.log('set caret position')
-          } else {
-            console.log('waiting...')
-            Vue.nextTick(setCaretPosition)
-          }
-        }
-
-        setCaretPosition()
-      },
-      textAreaFocusWtf: function () {
-        let sourceElement = document.getElementById('source')
-        sourceElement.focus()
+      focusEditor: function () {
+        document.getElementById('editor').getElementsByClassName('inputarea')[0].focus()
       }
     }
   }

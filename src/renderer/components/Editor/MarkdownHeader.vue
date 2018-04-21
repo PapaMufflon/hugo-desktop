@@ -14,49 +14,57 @@
 <script>
   export default {
     name: 'markdown-header',
-    props: ['content', 'selection-start', 'selection-end'],
+    props: ['editor'],
     data: function () {
       return {
         lastUsedHeader: 1
       }
     },
     methods: {
-      header: function (level) {
-        if (level === 0) {
-          level = this.lastUsedHeader
+      header: function (desiredLevel) {
+        if (desiredLevel === 0) {
+          desiredLevel = this.lastUsedHeader
         }
 
-        this.lastUsedHeader = level
+        const currentSelection = this.editor.getSelection()
+        const currentLineText = this.editor.getModel().getLineContent(currentSelection.startLineNumber)
 
-        let positionForHeader = this.content.lastIndexOf('\n', this.selectionStart - 1) + 1
+        function getCurrentHeaderLevel (s) {
+          let level = 0
 
-        let currentHeaderFormat = this.content.substring(positionForHeader, positionForHeader + 5)
-        let currentHeaderLevel = 0
-
-        while (currentHeaderFormat.startsWith('#')) {
-          currentHeaderLevel++
-          currentHeaderFormat = currentHeaderFormat.slice(1)
-        }
-
-        if (currentHeaderLevel === level) {
-          return
-        }
-
-        let newContent = this.content
-
-        if (currentHeaderLevel > level) {
-          newContent = this.content.slice(0, positionForHeader) + this.content.slice(positionForHeader + currentHeaderLevel - level)
-        } else {
-          let headerToInsert = '#'.repeat(level - currentHeaderLevel)
-
-          if (currentHeaderLevel === 0) {
-            headerToInsert += ' '
+          while (s.startsWith('#')) {
+            s = s.slice(1)
+            level++
           }
 
-          newContent = this.content.slice(0, positionForHeader) + headerToInsert + this.content.slice(positionForHeader)
+          return level
         }
 
-        this.$emit('update:content', newContent)
+        const currentHeaderLevel = getCurrentHeaderLevel(currentLineText)
+        const headerTextStart = currentHeaderLevel === 0 ? 0 : currentHeaderLevel + 1
+        const textWithoutHeaderFormat = currentLineText.slice(headerTextStart)
+        const result = '#'.repeat(desiredLevel) + ' ' + textWithoutHeaderFormat
+
+        this.editor.executeEdits('MarkdownHeader', [
+          {
+            range: {
+              startLineNumber: currentSelection.startLineNumber,
+              startColumn: 0,
+              endLineNumber: currentSelection.startLineNumber,
+              endColumn: this.editor.getModel().getLineMaxColumn(currentSelection.startLineNumber)
+            },
+            text: result
+          }
+        ], [
+          {
+            selectionStartLineNumber: currentSelection.selectionStartLineNumber,
+            selectionStartColumn: currentSelection.selectionStartColumn + desiredLevel - headerTextStart + 1,
+            positionLineNumber: currentSelection.selectionStartLineNumber,
+            positionColumn: currentSelection.positionColumn + desiredLevel - headerTextStart + 1
+          }
+        ])
+
+        this.editor.focus()
       }
     }
   }

@@ -11,7 +11,7 @@ backlog
         commit & push to upstream
     create new repo in GitHub
     spinner when creating new blog
-    use monaco editor (https://github.com/Microsoft/monaco-editor)
+    ask to rename image when uploading
     settings page for blog
         change title, baseurl
         access template
@@ -36,3 +36,4 @@ https://electronjs.org/docs/tutorial/using-native-node-modules
             .\node_modules\.bin\electron-rebuild.cmd
 
             ...now it's working :)
+            don't forget to restart the console before rebuilding...

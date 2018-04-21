@@ -14,7 +14,7 @@ const util = require('util')
 
 export default {
   name: 'markdown-image',
-  props: ['currentPost', 'content', 'selection-start', 'selection-end'],
+  props: ['currentPost', 'editor'],
   methods: {
     insertImage: function () {
       const cloudinaryUpload = util.promisify(cloudinary.v2.uploader.upload)
@@ -24,15 +24,14 @@ export default {
         this.currentPost.title + '/'
 
       const placeholder = `### image url is getting fetched, don't change this ###`
-      const selection = this.selectionStart !== this.selectionEnd ? this.content.slice(this.selectionStart, this.selectionEnd) : ''
+      const currentSelection = this.editor.getSelection()
+      const currentSelectedText = this.editor.getModel().getValueInRange(currentSelection)
       const newContent =
-        this.content.slice(0, this.selectionStart) +
         '![alt text](' +
         placeholder +
         ' "' +
-        selection +
-        '")' +
-        this.content.slice(this.selectionEnd, this.content.length)
+        currentSelectedText +
+        '")'
 
       dialog.showOpenDialog(async (fileNames) => {
         if (fileNames === undefined) {
@@ -40,27 +39,28 @@ export default {
           return
         }
 
-        this.$emit('update:content', newContent)
-        this.$emit('change-caret-position', this.selectionStart + 2)
+        this.editor.executeEdits('MarkdownImage', [
+          { range: currentSelection, text: newContent }
+        ], [
+          {
+            selectionStartLineNumber: currentSelection.startLineNumber,
+            selectionStartColumn: currentSelection.startColumn + 2,
+            positionLineNumber: currentSelection.endLineNumber,
+            positionColumn: currentSelection.startColumn + 10
+          }
+        ])
+
+        this.editor.focus()
 
         const fileName = fileNames[0]
         const publicId = basepath + path.basename(fileName, path.extname(fileName)).replace(/ /g, '-')
 
-        await cloudinaryUpload(fileName, {public_id: publicId})
-          .then(uploadResult => {
-            const placeholderIndex = this.content.indexOf(placeholder)
-            const placeholderReplacedContent =
-              this.content.slice(0, placeholderIndex) +
-              uploadResult.secure_url +
-              this.content.slice(placeholderIndex + placeholder.length, this.content.length)
+        const uploadResult = await cloudinaryUpload(fileName, {public_id: publicId})
+        const placeholderRange = this.editor.getModel().findMatches(placeholder)[0].range
 
-            this.$emit('update:content', placeholderReplacedContent)
-            this.$emit('text-area-focus-wtf')
-          })
-          .catch(error => {
-            alert('An error ocurred reading the posts' + error.message)
-            console.log(error)
-          })
+        this.editor.executeEdits('MarkdownImage', [
+          { range: placeholderRange, text: uploadResult.secure_url }
+        ])
       })
     }
   }
