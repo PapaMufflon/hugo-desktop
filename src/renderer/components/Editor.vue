@@ -128,7 +128,9 @@
         thisEditor.monaco = this.monaco
 
         const editorContainer = document.getElementById('editor')
-        thisEditor.editor = this.monaco.editor.create(editorContainer)
+        thisEditor.editor = this.monaco.editor.create(editorContainer, {
+          wordWrap: 'on'
+        })
 
         function updateDimensions () {
           thisEditor.editor.layout()
