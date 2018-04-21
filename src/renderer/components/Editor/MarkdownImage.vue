@@ -41,17 +41,26 @@ export default {
 
         this.editor.executeEdits('MarkdownImage', [
           { range: currentSelection, text: newContent }
+        ], [
+          {
+            selectionStartLineNumber: currentSelection.startLineNumber,
+            selectionStartColumn: currentSelection.startColumn + 2,
+            positionLineNumber: currentSelection.endLineNumber,
+            positionColumn: currentSelection.startColumn + 10
+          }
         ])
+
+        this.editor.focus()
 
         const fileName = fileNames[0]
         const publicId = basepath + path.basename(fileName, path.extname(fileName)).replace(/ /g, '-')
 
         const uploadResult = await cloudinaryUpload(fileName, {public_id: publicId})
         const placeholderRange = this.editor.getModel().findMatches(placeholder)[0].range
+
         this.editor.executeEdits('MarkdownImage', [
           { range: placeholderRange, text: uploadResult.secure_url }
         ])
-        this.$emit('text-area-focus-wtf')
       })
     }
   }

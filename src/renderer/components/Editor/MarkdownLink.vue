@@ -18,9 +18,16 @@
 
         this.editor.executeEdits('MarkdownImage', [
           { range: currentSelection, text: newContent }
+        ], [
+          {
+            selectionStartLineNumber: currentSelection.selectionStartLineNumber,
+            selectionStartColumn: currentSelection.selectionStartColumn + 1,
+            positionLineNumber: currentSelection.positionLineNumber,
+            positionColumn: currentSelection.positionColumn + 1
+          }
         ])
 
-        this.$emit('text-area-focus-wtf')
+        this.editor.focus()
       }
     }
   }

@@ -19,19 +19,16 @@
                         </posts-menu-item>
                         
                         <markdown-header
-                            :editor="editor"
-                            :monaco="monaco">
+                            :editor="editor">
                         </markdown-header>
 
                         <markdown-link
-                            :editor="editor"
-                            @text-area-focus-wtf="textAreaFocusWtf">
+                            :editor="editor">
                         </markdown-link>
 
                         <markdown-image
                             :currentPost="currentPost"
-                            :editor="editor"
-                            @text-area-focus-wtf="textAreaFocusWtf">
+                            :editor="editor">
                         </markdown-image>
                     </div>
 
@@ -87,6 +84,8 @@
   const cwd = require('cwd')
   
   function startHugo (blogPath) {
+    console.log('starting serving ' + blogPath)
+
     hugo(path.join(cwd(), 'hugo.exe'), ['serve', '-s', blogPath, '-D'], function (err, data) {
       if (err) {
         console.error(err)
@@ -287,9 +286,8 @@
       updateCaretPosition: function (newPosition) {
         this.editor.setPosition(newPosition)
       },
-      textAreaFocusWtf: function () {
-        let sourceElement = document.getElementById('editor')
-        sourceElement.focus()
+      focusEditor: function () {
+        document.getElementById('editor').getElementsByClassName('inputarea')[0].focus()
       }
     }
   }
