@@ -83,6 +83,10 @@
               titleImage: details.titleImage,
               filepath: path.join(this.blogPostsPath, f)
             })
+
+            this.posts = this.posts.sort((a, b) => {
+              return (b.date > a.date) - (b.date < a.date)
+            })
           })
         })
       })

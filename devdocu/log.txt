@@ -1,5 +1,7 @@
 backlog
+    only show drafts
     go back to posts overview
+    shortcut for markdown actions
     no photo image in posts overview
     fix bug: update editor layout when going from two to one column layout
     word count
@@ -13,6 +15,7 @@ backlog
         push gh-pages branch to origin
         set upstream/gh-pages branch as public folder on master
         commit & push to upstream
+    delete post
     create new repo in GitHub
     spinner when creating new blog
     ask to rename image when uploading
