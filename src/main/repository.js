@@ -1,3 +1,7 @@
+'use strict'
+
+import hugoDesktopDate from './../hugo-desktop-date.js'
+
 const hugo = require('child_process').execFile
 const cwd = require('cwd')
 const path = require('path')
@@ -44,7 +48,7 @@ async function createDefaultPost (blogPath) {
   const postsFolder = path.join(blogPath, 'content', 'posts')
   const content = `---
 title: "First post"
-date: ${new Date().toISOString()}
+date: ${hugoDesktopDate.toShortDate(new Date())}
 draft: true
 ---
 This is your first post :)`

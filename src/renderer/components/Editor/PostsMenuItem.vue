@@ -18,6 +18,8 @@
 </template>
 
 <script>
+import hugoDesktopDate from './../../../hugo-desktop-date.js'
+
 const path = require('path')
 const fs = require('fs')
 
@@ -31,7 +33,7 @@ export default {
     newPost: function () {
       const template = `---
 title: "New post"
-date: ${new Date()}
+date: ${hugoDesktopDate.toShortDate(new Date())}
 draft: true
 ---
 `
