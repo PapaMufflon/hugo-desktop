@@ -7,7 +7,7 @@
         <article class="box">
           <div class="media">
             <aside class="media-left has-text-centered">
-              <img src="file://C:/src/hugo-desktop/alsnuff/static/images/Wasserfall-Val-d-Efra.jpg" width="80">
+              <img :src="post.titleImage" width="80">
               <br>
               <span class="tag is-warning" v-if="post.draft">Draft</span>
             </aside>
@@ -16,16 +16,17 @@
                 <a @click="openPost(post)">{{post.title}}</a>
               </p>
               <div class="subtitle is-marginless">
-                <span class="tag is-primary">Bergwandern</span>
+                <span class="tag is-primary" v-for="category in post.categories" :key="category">{{category}}</span>
               </div>
-              <div class="blog-tags" v-for="tag in post.tags" :key="tag">
-                <span class="tag">{{tag}}</span>
+              <div class="blog-tags">
+                <span class="tag" v-for="tag in post.tags" :key="tag">{{tag}}</span>
               </div>
               <p class="content is-small">
                 <a @click="openPost(post)">Edit</a>
                 <span>·</span>
                 <a>Delete</a>
-                <span class="is-pulled-right">Last edited {{post.date.toLocaleDateString()}}</span>
+                <span class="is-pulled-right" v-if="post.draft">Last edited {{post.date.toLocaleDateString()}}</span>
+                <span class="is-pulled-right" v-if="!post.draft">Published {{post.date.toLocaleDateString()}}</span>
               </p>
             </div>
           </div>
@@ -77,6 +78,7 @@
               title: details.title,
               date: details.date,
               draft: details.draft,
+              categories: details.categories,
               tags: details.tags,
               titleImage: details.titleImage,
               filepath: path.join(this.blogPostsPath, f)

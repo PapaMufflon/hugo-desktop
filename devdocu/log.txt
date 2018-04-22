@@ -1,4 +1,6 @@
 backlog
+    go back to posts overview
+    no photo image in posts overview
     fix bug: update editor layout when going from two to one column layout
     word count
         add status bar
