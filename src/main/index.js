@@ -1,7 +1,8 @@
 'use strict'
 
 import { app, BrowserWindow, ipcMain, dialog } from 'electron'
-import repository from './repository.js'
+import repository from './repository'
+import hugo from './hugo'
 
 /**
  * Set `__static` path to static files in production
@@ -77,4 +78,8 @@ ipcMain.on('selectDirectory', (event, arg) => {
 ipcMain.on('createBlog', async (event, blogData) => {
   const blogPath = await repository.createBlog(blogData)
   event.sender.send('blogCreated', blogPath)
+})
+
+ipcMain.on('startServeBlog', async (event, blogPath) => {
+  hugo.startServeBlog(blogPath)
 })
