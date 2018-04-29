@@ -1,6 +1,7 @@
 backlog
+    select folder --> component
+    navigate back --> component
     only show drafts
-    go back to posts overview
     shortcut for markdown actions
     no photo image in posts overview
     fix bug: update editor layout when going from two to one column layout

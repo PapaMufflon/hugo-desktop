@@ -3,11 +3,15 @@
         <div class="container">
             <nav class="navbar is-transparent">
                 <div class="navbar-brand">
-                    <div class="navbar-burger burger" data-target="navMenu">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </div>
+                    <a class="navbar-item" @click="goToContent">
+                      <span class="icon">
+                        <font-awesome-icon :icon="['fas', 'arrow-left']" />
+                      </span>
+                    </a>
+
+                    <a class="navbar-item" href="https://github.com/PapaMufflon/hugo-desktop">
+                      hugo-desktop
+                    </a>
                 </div>
                 
                 <div id="navMenu" class="navbar-menu">
@@ -74,86 +78,83 @@
   import PostsMenuItem from './Editor/PostsMenuItem'
   import Publish from './Editor/Publish'
   
-  import { BLOG_OPENED } from './../store/mutation-types'
+  import { BLOG_OPENED, SET_AMD_REQUIRE } from './../store/mutation-types'
 
   const path = require('path')
   const fs = require('fs')
   const sanitize = require('sanitize-filename')
   const {shell} = require('electron')
-  const hugo = require('child_process').execFile
-  const cwd = require('cwd')
-  
-  function startHugo (blogPath) {
-    console.log('starting serving ' + blogPath)
 
-    hugo(path.join(cwd(), 'hugo.exe'), ['serve', '-s', blogPath, '-D'], function (err, data) {
-      if (err) {
-        console.error(err)
+  function requireMonacoEditor (amdRequire, thisEditor) {
+    var path = require('path')
+
+    function uriFromPath (_path) {
+      var pathName = path.resolve(_path).replace(/\\/g, '/')
+
+      if (pathName.length > 0 && pathName.charAt(0) !== '/') {
+        pathName = '/' + pathName
       }
+
+      return encodeURI('file://' + pathName)
+    }
+
+    amdRequire.config({
+      baseUrl: uriFromPath(path.join(__dirname, '../../../node_modules/monaco-editor/dev'))
+    })
+
+    // workaround monaco-css not understanding the environment
+    self.module = undefined
+
+    // workaround monaco-typescript not understanding the environment
+    self.process.browser = true
+
+    amdRequire(['vs/editor/editor.main'], function () {
+      thisEditor.monaco = this.monaco
+
+      const editorContainer = document.getElementById('editor')
+      thisEditor.editor = this.monaco.editor.create(editorContainer, {
+        wordWrap: 'on'
+      })
+
+      function updateDimensions () {
+        thisEditor.editor.layout()
+      }
+
+      window.addEventListener('resize', updateDimensions)
+      editorContainer.addEventListener('resize', updateDimensions)
+
+      thisEditor.editorModel = this.monaco.editor.createModel(thisEditor.content, 'markdown')
+      thisEditor.editorModel.onDidChangeContent(e => {
+        thisEditor.content = thisEditor.editorModel.getValue()
+      })
+
+      thisEditor.editor.onDidChangeCursorSelection(e => {
+        thisEditor.selection = e.selection
+      })
+
+      thisEditor.editor.setModel(thisEditor.editorModel)
     })
   }
 
   function loadMonacoEditor (thisEditor) {
-    const nodeRequire = global.require
+    if (thisEditor.$store.state.AmdRequire.amdRequire.config === undefined) {
+      const nodeRequire = global.require
+      const loaderScript = document.createElement('script')
 
-    const loaderScript = document.createElement('script')
+      loaderScript.onload = () => {
+        const amdRequire = global.require
+        thisEditor.$store.commit(SET_AMD_REQUIRE, amdRequire)
 
-    loaderScript.onload = () => {
-      const amdRequire = global.require
-      global.require = nodeRequire
+        global.require = nodeRequire
 
-      var path = require('path')
-
-      function uriFromPath (_path) {
-        var pathName = path.resolve(_path).replace(/\\/g, '/')
-
-        if (pathName.length > 0 && pathName.charAt(0) !== '/') {
-          pathName = '/' + pathName
-        }
-
-        return encodeURI('file://' + pathName)
+        requireMonacoEditor(amdRequire, thisEditor)
       }
 
-      amdRequire.config({
-        baseUrl: uriFromPath(path.join(__dirname, '../../../node_modules/monaco-editor/dev'))
-      })
-
-      // workaround monaco-css not understanding the environment
-      self.module = undefined
-
-      // workaround monaco-typescript not understanding the environment
-      self.process.browser = true
-
-      amdRequire(['vs/editor/editor.main'], function () {
-        thisEditor.monaco = this.monaco
-
-        const editorContainer = document.getElementById('editor')
-        thisEditor.editor = this.monaco.editor.create(editorContainer, {
-          wordWrap: 'on'
-        })
-
-        function updateDimensions () {
-          thisEditor.editor.layout()
-        }
-
-        window.addEventListener('resize', updateDimensions)
-        editorContainer.addEventListener('resize', updateDimensions)
-
-        thisEditor.editorModel = this.monaco.editor.createModel(thisEditor.content, 'markdown')
-        thisEditor.editorModel.onDidChangeContent(e => {
-          thisEditor.content = thisEditor.editorModel.getValue()
-        })
-
-        thisEditor.editor.onDidChangeCursorSelection(e => {
-          thisEditor.selection = e.selection
-        })
-
-        thisEditor.editor.setModel(thisEditor.editorModel)
-      })
+      loaderScript.setAttribute('src', '../node_modules/monaco-editor/dev/vs/loader.js')
+      document.body.appendChild(loaderScript)
+    } else {
+      requireMonacoEditor(thisEditor.$store.state.AmdRequire.amdRequire, thisEditor)
     }
-
-    loaderScript.setAttribute('src', '../node_modules/monaco-editor/dev/vs/loader.js')
-    document.body.appendChild(loaderScript)
   }
 
   export default {
@@ -178,9 +179,6 @@
       }
     },
     created: function () {
-      startHugo(this.$store.state.BlogCollection.currentBlogPath)
-      loadMonacoEditor(this)
-
       if (this.$route.query.posts !== undefined) {
         this.posts = this.$route.query.posts
         this.currentPost = this.$route.query.post
@@ -208,6 +206,9 @@
         subtitle: '',
         path: this.$store.state.BlogCollection.currentBlogPath
       })
+    },
+    mounted: function () {
+      loadMonacoEditor(this)
     },
     watch: {
       content: function (val, oldVal) {
@@ -282,6 +283,9 @@
       },
       openPost: function (post) {
         this.currentPost = post
+      },
+      goToContent: function () {
+        this.$router.push({path: '/content'})
       },
       toggleSplitscreen: function () {
         this.showPreview = !this.showPreview

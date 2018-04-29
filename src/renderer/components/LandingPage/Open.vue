@@ -13,22 +13,24 @@
 
       <div class="field is-grouped is-grouped-right">
         <p class="control">
-          <a class="button is-primary" v-on:click="openBlog">
-            Open
-          </a>
+          <open-blog-button
+            buttonText="Open"
+            :blogPath="directory">
+          </open-blog-button>
         </p>
       </div>
     </section>
 </template>
 
 <script>
-  import { CHANGE_CURRENT_BLOG } from './../../store/mutation-types'
+  import OpenBlogButton from './OpenBlogButton'
 
   const electron = require('electron')
   const ipcRenderer = electron.ipcRenderer
 
   export default {
     name: 'open',
+    components: { OpenBlogButton },
     data: function () {
       return {
         directory: ''
@@ -43,10 +45,6 @@
         })
 
         ipcRenderer.send('selectDirectory')
-      },
-      async openBlog () {
-        this.$store.commit(CHANGE_CURRENT_BLOG, this.directory)
-        this.$router.push({path: '/editor'})
       }
     }
   }
