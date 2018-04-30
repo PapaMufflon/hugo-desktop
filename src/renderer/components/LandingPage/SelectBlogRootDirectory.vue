@@ -16,8 +16,7 @@
 </template>
 
 <script>
-  const electron = require('electron')
-  const ipcRenderer = electron.ipcRenderer
+  import electron from 'electron'
 
   export default {
     name: 'select-blog-root-directory',
@@ -33,6 +32,8 @@
     },
     methods: {
       chooseFolder: function () {
+        const ipcRenderer = electron.ipcRenderer
+
         let that = this
 
         ipcRenderer.on('directory', function (event, message) {

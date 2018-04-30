@@ -1,5 +1,4 @@
 backlog
-    select folder --> component
     navigate back --> component
     only show drafts
     shortcut for markdown actions

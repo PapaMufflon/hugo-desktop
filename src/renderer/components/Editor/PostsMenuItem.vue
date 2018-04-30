@@ -23,9 +23,6 @@ import hugoDesktopDate from './../../../hugo-desktop-date.js'
 const path = require('path')
 const fs = require('fs')
 
-const alsnuffPath = path.join(require('cwd')(), 'alsnuff')
-const alsnuffPosts = path.join(alsnuffPath, 'content', 'posts')
-
 export default {
   name: 'posts-menu-item',
   props: ['posts'],
@@ -38,7 +35,8 @@ draft: true
 ---
 `
 
-      var newPostPath = path.join(alsnuffPosts, 'new-post.md')
+      const postsPath = path.join(this.$store.state.BlogCollection.currentBlogPath, 'content', 'posts')
+      const newPostPath = path.join(postsPath, 'new-post.md')
 
       fs.writeFile(newPostPath, template, (err) => {
         if (err) {
