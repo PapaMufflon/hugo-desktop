@@ -7,16 +7,9 @@
         </div>
       </div>
 
-      <div class="field is-grouped">
-        <p class="control is-expanded">
-          <input class="input" type="folder" placeholder="Local destination folder" v-model="directory">
-        </p>
-        <div class="control">
-          <a class="button is-info" v-on:click="chooseFolder">
-            Select
-          </a>
-        </div>
-      </div>
+      <select-blog-root-directory
+        v-on:directory-selected="directory = $event">
+      </select-blog-root-directory>
 
       <div class="field is-grouped is-grouped-right">
         <p class="control">
@@ -29,6 +22,7 @@
 </template>
 
 <script>
+  import SelectBlogRootDirectory from './SelectBlogRootDirectory'
   import { CHANGE_CURRENT_BLOG } from './../../store/mutation-types'
 
   const electron = require('electron')
@@ -36,6 +30,7 @@
 
   export default {
     name: 'create',
+    components: { SelectBlogRootDirectory },
     data: function () {
       return {
         blogName: '',
@@ -43,15 +38,6 @@
       }
     },
     methods: {
-      chooseFolder: function () {
-        let that = this
-
-        ipcRenderer.on('directory', function (event, message) {
-          that.directory = message[0]
-        })
-
-        ipcRenderer.send('selectDirectory')
-      },
       async createBlog () {
         ipcRenderer.on('blogCreated', (event, blogPath) => {
           this.$store.commit(CHANGE_CURRENT_BLOG, blogPath)
