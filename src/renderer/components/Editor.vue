@@ -18,7 +18,6 @@
                     <div class="navbar-start">
                         <posts-menu-item
                             :posts="posts"
-                            @new-post="newPost"
                             @open-post="openPost">
                         </posts-menu-item>
                         
@@ -277,10 +276,6 @@
       }
     },
     methods: {
-      newPost: function (newPost) {
-        this.posts.push(newPost)
-        this.currentPost = newPost
-      },
       openPost: function (post) {
         this.currentPost = post
       },

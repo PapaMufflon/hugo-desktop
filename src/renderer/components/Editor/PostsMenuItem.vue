@@ -8,48 +8,25 @@
                 {{ post.title }}
             </a>
             <hr class="navbar-divider">
-            <div class="navbar-item">
-                <div>
-                    <a @click="newPost">New Post</a>
-                </div>
-            </div>
+            <navbar-new-post-button
+              :posts="posts"
+              @new-post="newPost">
+            </navbar-new-post-button>
         </div>
     </div>
 </template>
 
 <script>
-import hugoDesktopDate from './../../../hugo-desktop-date.js'
-
-const path = require('path')
-const fs = require('fs')
+import NavbarNewPostButton from './../Shared/NavbarNewPostButton'
 
 export default {
   name: 'posts-menu-item',
   props: ['posts'],
+  components: { NavbarNewPostButton },
   methods: {
-    newPost: function () {
-      const template = `---
-title: "New post"
-date: ${hugoDesktopDate.toShortDate(new Date())}
-draft: true
----
-`
-
-      const postsPath = path.join(this.$store.state.BlogCollection.currentBlogPath, 'content', 'posts')
-      const newPostPath = path.join(postsPath, 'new-post.md')
-
-      fs.writeFile(newPostPath, template, (err) => {
-        if (err) {
-          alert('An error ocurred creating the file ' + err.message)
-        }
-
-        var newPost = {
-          title: 'New post',
-          filepath: newPostPath
-        }
-
-        this.$emit('new-post', newPost)
-      })
+    newPost: function (newPost) {
+      this.posts.push(newPost)
+      this.$emit('open-post', newPost)
     },
     openPost: function (post) {
       this.$emit('open-post', post)
