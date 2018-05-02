@@ -20,7 +20,7 @@ export default {
       const cloudinaryUpload = util.promisify(cloudinary.v2.uploader.upload)
 
       const basepath =
-        path.basename(this.$store.state.BlogCollection.currentBlogPath).replace(/ /g, '-') + '/' +
+        path.basename(this.$store.state.ActiveBlog.blogData.basePath).replace(/ /g, '-') + '/' +
         this.currentPost.title + '/'
 
       const placeholder = `### image url is getting fetched, don't change this ###`

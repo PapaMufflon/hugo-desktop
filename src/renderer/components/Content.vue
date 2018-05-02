@@ -38,66 +38,19 @@
 </template>
 
 <script>
-  import frontmatter from './../frontmatter.js'
-
-  const path = require('path')
-  const fs = require('fs')
-
   export default {
     name: 'editor',
-    data: function () {
-      return {
-        posts: []
-      }
-    },
     computed: {
-      blogPostsPath () {
-        return path.join(this.$store.state.BlogCollection.currentBlogPath, 'content', 'posts')
+      posts () {
+        return this.$store.getters.sortedPosts
       }
-    },
-    created: function () {
-      fs.readdir(this.blogPostsPath, (err, files) => {
-        if (err) {
-          alert('An error ocurred reading the posts' + err.message)
-          console.log(err)
-          return
-        }
-
-        files.forEach(f => {
-          fs.readFile(path.join(this.blogPostsPath, f), 'utf-8', (err, data) => {
-            if (err) {
-              alert('An error ocurred reading the file :' + err.message)
-              return
-            }
-
-            const start = data.indexOf('---')
-            const end = data.indexOf('---', start + 1)
-            const details = frontmatter.parse(data.substring(start + 3, end))
-
-            this.posts.push({
-              title: details.title,
-              date: details.date,
-              draft: details.draft,
-              categories: details.categories,
-              tags: details.tags,
-              titleImage: details.titleImage,
-              filepath: path.join(this.blogPostsPath, f)
-            })
-
-            this.posts = this.posts.sort((a, b) => {
-              return (b.date > a.date) - (b.date < a.date)
-            })
-          })
-        })
-      })
     },
     methods: {
       openPost: function (post) {
         this.$router.push({
           path: '/editor',
           query: {
-            post: post,
-            posts: this.posts
+            post: post
           }
         })
       }

@@ -1,4 +1,4 @@
-import { CHANGE_CURRENT_BLOG, BLOG_OPENED } from './../mutation-types'
+import { OPEN_BLOG } from './../mutation-types'
 
 const Store = require('electron-store')
 const store = new Store()
@@ -25,7 +25,6 @@ function loadRecentBlogs () {
 }
 
 const state = {
-  currentBlogPath: '',
   recentBlogs: loadRecentBlogs()
 }
 
@@ -36,10 +35,7 @@ const getters = {
 }
 
 const mutations = {
-  [CHANGE_CURRENT_BLOG] (state, newBlogPath) {
-    state.currentBlogPath = newBlogPath
-  },
-  [BLOG_OPENED] (state, blogData) {
+  [OPEN_BLOG] (state, blogData) {
     state.recentBlogs.unshift(blogData)
     removeDuplicateBlogData(state.recentBlogs)
 

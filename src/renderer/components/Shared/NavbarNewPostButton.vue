@@ -8,6 +8,7 @@
 
 <script>
 import hugoDesktopDate from './../../../hugo-desktop-date.js'
+import { ADD_POST } from './../../store/mutation-types'
 
 const path = require('path')
 const fs = require('fs')
@@ -23,8 +24,7 @@ draft: true
 ---
 `
 
-      const postsPath = path.join(this.$store.state.BlogCollection.currentBlogPath, 'content', 'posts')
-      const newPostPath = path.join(postsPath, 'new-post.md')
+      const newPostPath = path.join(this.$store.getters.postsPath, 'New-post.md')
 
       fs.writeFile(newPostPath, template, (err) => {
         if (err) {
@@ -33,9 +33,15 @@ draft: true
 
         var newPost = {
           title: 'New post',
+          date: new Date(),
+          draft: true,
+          categories: [],
+          tags: [],
+          titleImage: '',
           filepath: newPostPath
         }
 
+        this.$store.commit(ADD_POST, newPost)
         this.$emit('new-post', newPost)
       })
     }

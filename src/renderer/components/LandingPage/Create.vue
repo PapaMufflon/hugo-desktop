@@ -23,7 +23,7 @@
 
 <script>
   import SelectBlogRootDirectory from './SelectBlogRootDirectory'
-  import { CHANGE_CURRENT_BLOG } from './../../store/mutation-types'
+  import { OPEN_BLOG } from './../../store/mutation-types'
 
   const electron = require('electron')
   const ipcRenderer = electron.ipcRenderer
@@ -40,8 +40,10 @@
     methods: {
       async createBlog () {
         ipcRenderer.on('blogCreated', (event, blogPath) => {
-          this.$store.commit(CHANGE_CURRENT_BLOG, blogPath)
-          this.$router.push({path: '/editor'})
+          ipcRenderer.send('startServeBlog', this.blogPath)
+
+          this.$store.dispatch(OPEN_BLOG, blogPath)
+          this.$router.push({path: '/content'})
         })
 
         ipcRenderer.send('createBlog', { directory: this.directory, name: this.blogName })

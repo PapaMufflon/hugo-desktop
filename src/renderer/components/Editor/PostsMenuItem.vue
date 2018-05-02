@@ -10,7 +10,7 @@
             <hr class="navbar-divider">
             <navbar-new-post-button
               :posts="posts"
-              @new-post="newPost">
+              @new-post="openPost($event)">
             </navbar-new-post-button>
         </div>
     </div>
@@ -21,13 +21,13 @@ import NavbarNewPostButton from './../Shared/NavbarNewPostButton'
 
 export default {
   name: 'posts-menu-item',
-  props: ['posts'],
+  computed: {
+    posts () {
+      return this.$store.getters.sortedPosts
+    }
+  },
   components: { NavbarNewPostButton },
   methods: {
-    newPost: function (newPost) {
-      this.posts.push(newPost)
-      this.$emit('open-post', newPost)
-    },
     openPost: function (post) {
       this.$emit('open-post', post)
     }

@@ -77,7 +77,7 @@
   import PostsMenuItem from './Editor/PostsMenuItem'
   import Publish from './Editor/Publish'
   
-  import { BLOG_OPENED, SET_AMD_REQUIRE } from './../store/mutation-types'
+  import { SET_AMD_REQUIRE, CHANGE_POST } from './../store/mutation-types'
 
   const path = require('path')
   const fs = require('fs')
@@ -162,7 +162,6 @@
     data: function () {
       return {
         content: '',
-        posts: [],
         currentPost: '',
         renaming: false,
         showPreview: true,
@@ -173,38 +172,12 @@
       }
     },
     computed: {
-      blogPostsPath () {
-        return path.join(this.$store.state.BlogCollection.currentBlogPath, 'content', 'posts')
+      posts () {
+        return this.$store.getters.sortedPosts
       }
     },
     created: function () {
-      if (this.$route.query.posts !== undefined) {
-        this.posts = this.$route.query.posts
-        this.currentPost = this.$route.query.post
-      } else {
-        fs.readdir(this.blogPostsPath, (err, files) => {
-          if (err) {
-            alert('An error ocurred reading the posts' + err.message)
-            console.log(err)
-            return
-          }
-
-          this.posts = files.map(f => {
-            return {
-              title: path.basename(f, path.extname(f)),
-              filepath: path.join(this.blogPostsPath, f)
-            }
-          })
-
-          this.currentPost = this.posts[0]
-        })
-      }
-
-      this.$store.commit(BLOG_OPENED, {
-        title: path.basename(this.$store.state.BlogCollection.currentBlogPath),
-        subtitle: '',
-        path: this.$store.state.BlogCollection.currentBlogPath
-      })
+      this.currentPost = this.$route.query.post
     },
     mounted: function () {
       loadMonacoEditor(this)
@@ -226,12 +199,10 @@
             return
           }
 
-          const that = this
-
-          const makeFilenameMatchContentTitle = function (dataContext) {
+          const makeFilenameMatchContentTitle = function (dataContext, postsPath) {
             let title = dataContext.content.match(/title: "(.*)"/)[1]
             let filename = sanitize(title).replace(/ /g, '-') + '.md'
-            let filepath = path.join(that.blogPostsPath, filename)
+            let filepath = path.join(postsPath, filename)
 
             if (dataContext.currentPost.filepath !== filepath) {
               fs.rename(dataContext.currentPost.filepath, filepath, (err) => {
@@ -242,10 +213,12 @@
                   return
                 }
 
-                dataContext.currentPost.filepath = filepath
-                dataContext.currentPost.title = title
+                dataContext.$store.commit(CHANGE_POST, dataContext.currentPost, {
+                  filepath: filepath,
+                  title: title
+                })
 
-                makeFilenameMatchContentTitle(dataContext)
+                makeFilenameMatchContentTitle(dataContext, postsPath)
               })
             } else {
               dataContext.renaming = false
@@ -253,7 +226,7 @@
           }
 
           this.renaming = true
-          makeFilenameMatchContentTitle(this)
+          makeFilenameMatchContentTitle(this, this.$store.getters.postsPath)
         })
       },
       currentPost: function (val, oldVal) {

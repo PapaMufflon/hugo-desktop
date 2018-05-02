@@ -5,7 +5,7 @@
 </template>
 
 <script>
-  import { CHANGE_CURRENT_BLOG } from './../../store/mutation-types'
+  import { OPEN_BLOG } from './../../store/mutation-types'
 
   const electron = require('electron')
   const ipcRenderer = electron.ipcRenderer
@@ -17,7 +17,7 @@
       async openBlog () {
         ipcRenderer.send('startServeBlog', this.blogPath)
 
-        this.$store.commit(CHANGE_CURRENT_BLOG, this.blogPath)
+        this.$store.dispatch(OPEN_BLOG, this.blogPath)
         this.$router.push({path: '/content'})
       }
     }
