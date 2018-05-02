@@ -3,11 +3,8 @@
         <div class="container">
             <nav class="navbar is-transparent">
                 <div class="navbar-brand">
-                    <a class="navbar-item" @click="goToContent">
-                      <span class="icon">
-                        <font-awesome-icon :icon="['fas', 'arrow-left']" />
-                      </span>
-                    </a>
+                    <navbar-go-back-button destination="content">
+                    </navbar-go-back-button>
 
                     <a class="navbar-item" href="https://github.com/PapaMufflon/hugo-desktop">
                       hugo-desktop
@@ -71,6 +68,7 @@
 </template>
 
 <script>
+  import NavbarGoBackButton from './Shared/NavbarGoBackButton'
   import MarkdownHeader from './Editor/MarkdownHeader'
   import MarkdownImage from './Editor/MarkdownImage'
   import MarkdownLink from './Editor/MarkdownLink'
@@ -158,7 +156,7 @@
 
   export default {
     name: 'editor',
-    components: { MarkdownHeader, MarkdownImage, MarkdownLink, PostsMenuItem, Publish },
+    components: { NavbarGoBackButton, MarkdownHeader, MarkdownImage, MarkdownLink, PostsMenuItem, Publish },
     data: function () {
       return {
         content: '',
@@ -251,9 +249,6 @@
     methods: {
       openPost: function (post) {
         this.currentPost = post
-      },
-      goToContent: function () {
-        this.$router.push({path: '/content'})
       },
       toggleSplitscreen: function () {
         this.showPreview = !this.showPreview

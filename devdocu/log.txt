@@ -1,5 +1,6 @@
 backlog
     navigate back --> component
+        style of editor (section no margin) is getting preserved
     only show drafts
     shortcut for markdown actions
     no photo image in posts overview
