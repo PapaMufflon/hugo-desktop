@@ -1,8 +1,7 @@
 import { OPEN_BLOG, ADD_POST, SET_BLOG_BASE_PATH, CHANGE_POST } from './../mutation-types'
+import path from 'path'
+import fs from 'fs'
 import frontmatter from './../../frontmatter.js'
-
-const path = require('path')
-const fs = require('fs')
 
 const state = {
   blogData: {
@@ -75,7 +74,7 @@ const mutations = {
   },
   [CHANGE_POST] (state, post, newPostData) {
     for (var property in newPostData) {
-      if (newPostData.hasOwnProperty(property)) {
+      if (post.hasOwnProperty(property)) {
         post[property] = newPostData[property]
       }
     }
