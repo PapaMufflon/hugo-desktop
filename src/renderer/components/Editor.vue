@@ -269,7 +269,7 @@
   }
 </script>
 
-<style>
+<style scoped>
 .fill-parent {
     position: relative;
     height: 100%;
