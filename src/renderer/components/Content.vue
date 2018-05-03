@@ -14,9 +14,21 @@
           </div>
 
           <div class="navbar-end">
+            <a class="navbar-item" @click="togglePublishedFilter">
+              <span class="icon" style="color: #333;">
+                <font-awesome-layers>
+                  <font-awesome-icon :icon="['fas', 'file']" v-bind:class="{ isNearlyTransparent: filterPublished }" />
+                  <font-awesome-icon v-if="filterPublished" :icon="['fas', 'ban']" />
+                </font-awesome-layers>
+              </span>
+            </a>
+
             <a class="navbar-item" @click="toggleDraftFilter">
               <span class="icon" style="color: #333;">
-                <font-awesome-icon :icon="['fas', 'columns']" />
+                <font-awesome-layers>
+                  <font-awesome-icon :icon="['fab', 'firstdraft']" v-bind:class="{ isNearlyTransparent: filterDrafts }" />
+                  <font-awesome-icon v-if="filterDrafts" :icon="['fas', 'ban']" />
+                </font-awesome-layers>
               </span>
             </a>
           </div>
@@ -31,7 +43,7 @@
           class="column is-12"
           v-for="post in posts"
           :key="post.title"
-          v-if="!filterDrafts || !post.draft">
+          v-if="!(filterDrafts && post.draft) && !(filterPublished && !post.draft)">
           <article class="box">
             <div class="media">
               <aside class="media-left has-text-centered">
@@ -71,6 +83,7 @@
     name: 'editor',
     data: function () {
       return {
+        filterPublished: false,
         filterDrafts: false
       }
     },
@@ -88,6 +101,9 @@
           }
         })
       },
+      togglePublishedFilter: function () {
+        this.filterPublished = !this.filterPublished
+      },
       toggleDraftFilter: function () {
         this.filterDrafts = !this.filterDrafts
       }
@@ -95,9 +111,13 @@
   }
 </script>
 
-<style>
+<style scoped>
 .blog-tags {
   margin-top: 0.5em;
   margin-bottom: 0.5em;
+}
+
+.isNearlyTransparent {
+  opacity: 0.2;
 }
 </style>

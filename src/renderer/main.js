@@ -8,7 +8,7 @@ import cloudinary from 'cloudinary'
 import cloudinaryConfig from './config'
 
 import fontawesome from '@fortawesome/fontawesome'
-import FontAwesomeIcon from '@fortawesome/vue-fontawesome'
+import { FontAwesomeIcon, FontAwesomeLayers } from '@fortawesome/vue-fontawesome'
 import solid from '@fortawesome/fontawesome-free-solid'
 import regular from '@fortawesome/fontawesome-free-regular'
 import brands from '@fortawesome/fontawesome-free-brands'
@@ -26,6 +26,7 @@ cloudinary.config({
 
 fontawesome.library.add(solid, regular, brands)
 Vue.component('font-awesome-icon', FontAwesomeIcon)
+Vue.component('font-awesome-layers', FontAwesomeLayers)
 
 /* eslint-disable no-new */
 new Vue({
