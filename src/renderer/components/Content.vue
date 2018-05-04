@@ -43,7 +43,7 @@
           class="column is-12"
           v-for="post in posts"
           :key="post.title"
-          v-if="!(filterDrafts && post.draft) && !(filterPublished && !post.draft)">
+          v-if="show(post)">
           <article class="box">
             <div class="media">
               <aside class="media-left has-text-centered">
@@ -106,6 +106,9 @@
       },
       toggleDraftFilter: function () {
         this.filterDrafts = !this.filterDrafts
+      },
+      show: function (post) {
+        return !(this.filterDrafts && post.draft) && !(this.filterPublished && !post.draft)
       }
     }
   }
