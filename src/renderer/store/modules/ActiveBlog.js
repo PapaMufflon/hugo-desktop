@@ -1,4 +1,4 @@
-import { OPEN_BLOG, ADD_POST, SET_BLOG_BASE_PATH, CHANGE_POST } from './../mutation-types'
+import { OPEN_BLOG, ADD_POST, SET_BLOG_BASE_PATH, CHANGE_POST, UNLOAD_ACTIVE_BLOG } from './../mutation-types'
 import path from 'path'
 import fs from 'fs'
 import frontmatter from './../../frontmatter.js'
@@ -78,12 +78,18 @@ const mutations = {
         post[property] = newPostData[property]
       }
     }
+  },
+  [UNLOAD_ACTIVE_BLOG] (state) {
+    state.blogData.basePath = ''
+    state.blogData.posts.length = 0
   }
 }
 
 const actions = {
   [OPEN_BLOG] ({commit}, blogBasePath) {
     commit(SET_BLOG_BASE_PATH, blogBasePath)
+
+    commit(UNLOAD_ACTIVE_BLOG)
     readPostDetails(postsPath(blogBasePath), commit)
   }
 }

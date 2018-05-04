@@ -81,12 +81,7 @@ describe('ActiveBlog', () => {
 
     ActiveBlog.__Rewire__('fs', {
       readdir: function (postsPath, callback) {
-        callback(undefined, ['file'])
-      },
-      readFile: function (path, format, callback) {
-        callback(undefined, `---
-title: foo
----`)
+        callback(undefined, [])
       }
     })
 
@@ -95,7 +90,7 @@ title: foo
     expect(commit.args[0]).to.deep.equal(['SET_BLOG_BASE_PATH', 'basePath'])
   })
 
-  it('adds a first post when opening a blog', () => {
+  it('adds all existing posts when opening a blog', () => {
     const commit = sinon.spy()
     const state = {
       blogData: {
@@ -106,18 +101,24 @@ title: foo
 
     ActiveBlog.__Rewire__('fs', {
       readdir: function (postsPath, callback) {
-        callback(undefined, ['file'])
+        callback(undefined, ['file', 'post'])
       },
       readFile: function (path, format, callback) {
-        callback(undefined, `---
+        if (path.endsWith('file')) {
+          callback(undefined, `---
 title: foo
 ---`)
+        } else {
+          callback(undefined, `---
+title: bar
+---`)
+        }
       }
     })
 
     ActiveBlog.actions[OPEN_BLOG]({commit, state}, 'basePath')
 
-    expect(commit.args[1]).to.deep.equal(
+    expect(commit.args[2]).to.deep.equal(
       ['ADD_POST', {
         title: 'foo',
         date: undefined,
@@ -127,6 +128,40 @@ title: foo
         titleImage: undefined,
         filepath: 'basePath\\content\\posts\\file'
       }]
+    )
+
+    expect(commit.args[3]).to.deep.equal(
+      ['ADD_POST', {
+        title: 'bar',
+        date: undefined,
+        draft: undefined,
+        categories: undefined,
+        tags: undefined,
+        titleImage: undefined,
+        filepath: 'basePath\\content\\posts\\post'
+      }]
+    )
+  })
+
+  it('removes the old posts when opening a new blog', () => {
+    const commit = sinon.spy()
+    const state = {
+      blogData: {
+        basePath: '',
+        posts: []
+      }
+    }
+
+    ActiveBlog.__Rewire__('fs', {
+      readdir: function (postsPath, callback) {
+        callback(undefined, [])
+      }
+    })
+
+    ActiveBlog.actions[OPEN_BLOG]({commit, state}, 'basePath')
+
+    expect(commit.args[1]).to.deep.equal(
+      ['UNLOAD_ACTIVE_BLOG']
     )
   })
 

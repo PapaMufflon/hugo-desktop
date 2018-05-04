@@ -3,6 +3,9 @@
     <div class="container">
       <nav class="navbar is-transparent">
         <div class="navbar-brand">
+          <navbar-go-back-button destination="">
+          </navbar-go-back-button>
+
           <a class="navbar-item" href="https://github.com/PapaMufflon/hugo-desktop">
             hugo-desktop
           </a>
@@ -79,8 +82,11 @@
 </template>
 
 <script>
+  import NavbarGoBackButton from './Shared/NavbarGoBackButton'
+
   export default {
     name: 'editor',
+    components: { NavbarGoBackButton },
     data: function () {
       return {
         filterPublished: false,
