@@ -1,15 +1,14 @@
 'use strict'
 
+import { execFile } from 'child_process'
+import cwd from 'cwd'
+import path from 'path'
+import git from 'nodegit'
+import fs from 'fs'
+import util from 'util'
 import hugoDesktopDate from './../hugo-desktop-date.js'
 
-const hugo = require('child_process').execFile
-const cwd = require('cwd')
-const path = require('path')
-const git = require('nodegit')
-const fs = require('fs')
-const util = require('util')
-
-const hugoExecFile = util.promisify(hugo)
+const hugoExecFile = util.promisify(execFile)
 const fsWriteFile = util.promisify(fs.writeFile)
 const fsReadFile = util.promisify(fs.readFile)
 

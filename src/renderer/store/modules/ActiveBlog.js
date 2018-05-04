@@ -87,9 +87,9 @@ const mutations = {
 
 const actions = {
   [OPEN_BLOG] ({commit}, blogBasePath) {
-    commit(SET_BLOG_BASE_PATH, blogBasePath)
-
     commit(UNLOAD_ACTIVE_BLOG)
+
+    commit(SET_BLOG_BASE_PATH, blogBasePath)
     readPostDetails(postsPath(blogBasePath), commit)
   }
 }

@@ -1,4 +1,3 @@
-import { expect } from 'chai'
 import sinon from 'sinon'
 import ActiveBlog from '@/store/modules/ActiveBlog'
 import { ADD_POST, SET_BLOG_BASE_PATH, CHANGE_POST, OPEN_BLOG } from '@/store/mutation-types'
@@ -87,7 +86,7 @@ describe('ActiveBlog', () => {
 
     ActiveBlog.actions[OPEN_BLOG]({commit, state}, 'basePath')
 
-    expect(commit.args[0]).to.deep.equal(['SET_BLOG_BASE_PATH', 'basePath'])
+    expect(commit.args[1]).to.deep.equal(['SET_BLOG_BASE_PATH', 'basePath'])
   })
 
   it('adds all existing posts when opening a blog', () => {
@@ -160,7 +159,7 @@ title: bar
 
     ActiveBlog.actions[OPEN_BLOG]({commit, state}, 'basePath')
 
-    expect(commit.args[1]).to.deep.equal(
+    expect(commit.args[0]).to.deep.equal(
       ['UNLOAD_ACTIVE_BLOG']
     )
   })
