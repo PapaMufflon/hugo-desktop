@@ -4,7 +4,6 @@ backlog
     fix bug: update editor layout when going from two to one column layout
     word count
         add status bar
-    read baseurl of config to show correct site
     read all subfolders of content, not just post(s)
     log in to GitHub
     finish setting up repository (https://gohugo.io/hosting-and-deployment/hosting-on-github/#preparations-for-gh-pages-branch)

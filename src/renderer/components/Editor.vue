@@ -60,7 +60,7 @@
                     </div>
                 </div>
                 <div class="column is-half full-height" v-if="showPreview">
-                    <webview class="fill-parent" src="http://localhost:1313/"></webview>
+                    <webview class="fill-parent" :src="previewUrl"></webview>
                 </div>
             </div>
         </div>
@@ -172,6 +172,9 @@
     computed: {
       posts () {
         return this.$store.getters.sortedPosts
+      },
+      previewUrl () {
+        return 'http://localhost:1313/' + this.$store.state.ActiveBlog.blogData.urlPath
       }
     },
     created: function () {

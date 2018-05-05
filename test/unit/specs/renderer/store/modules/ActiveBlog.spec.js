@@ -24,6 +24,11 @@ describe('ActiveBlog', () => {
       }
     }
 
+    ActiveBlog.__Rewire__('fs', {
+      readFile: function (path, format, callback) {
+      }
+    })
+
     ActiveBlog.mutations[SET_BLOG_BASE_PATH](state, 'FOO')
 
     expect(state.blogData.basePath).to.equal('FOO')
@@ -81,6 +86,8 @@ describe('ActiveBlog', () => {
     ActiveBlog.__Rewire__('fs', {
       readdir: function (postsPath, callback) {
         callback(undefined, [])
+      },
+      readFile: function (path, format, callback) {
       }
     })
 
@@ -107,7 +114,7 @@ describe('ActiveBlog', () => {
           callback(undefined, `---
 title: foo
 ---`)
-        } else {
+        } else if (path.endsWith('post')) {
           callback(undefined, `---
 title: bar
 ---`)
@@ -154,6 +161,8 @@ title: bar
     ActiveBlog.__Rewire__('fs', {
       readdir: function (postsPath, callback) {
         callback(undefined, [])
+      },
+      readFile: function (path, format, callback) {
       }
     })
 
@@ -161,6 +170,31 @@ title: bar
 
     expect(commit.args[0]).to.deep.equal(
       ['UNLOAD_ACTIVE_BLOG']
+    )
+  })
+
+  it('sets the url path which is configured in the toml file', () => {
+    const commit = sinon.spy()
+    const state = {
+      blogData: {
+        basePath: '',
+        posts: []
+      }
+    }
+
+    ActiveBlog.__Rewire__('fs', {
+      readdir: function (postsPath, callback) {
+        callback(undefined, [])
+      },
+      readFile: function (path, format, callback) {
+        callback(undefined, 'baseURL = "http://example.org/urlPath"')
+      }
+    })
+
+    ActiveBlog.actions[OPEN_BLOG]({commit, state}, 'basePath')
+
+    expect(commit.args[2]).to.deep.equal(
+      ['SET_URL_PATH', '/urlpath']
     )
   })
 
