@@ -9,6 +9,10 @@
                     <a class="navbar-item" href="https://github.com/PapaMufflon/hugo-desktop">
                       hugo-desktop
                     </a>
+
+                    <button @click="toggleMode">
+                      Toggle
+                    </button>
                 </div>
                 
                 <div id="navMenu" class="navbar-menu">
@@ -68,6 +72,10 @@
 </template>
 
 <script>
+  import unified from 'unified'
+  import parse from 'remark-parse'
+  import Vue from 'vue'
+
   import NavbarGoBackButton from './Shared/NavbarGoBackButton'
   import MarkdownHeader from './Editor/MarkdownHeader'
   import MarkdownImage from './Editor/MarkdownImage'
@@ -122,6 +130,7 @@
 
       thisEditor.editorModel = this.monaco.editor.createModel(thisEditor.content, 'markdown')
       thisEditor.editorModel.onDidChangeContent(e => {
+        console.log(e)
         thisEditor.content = thisEditor.editorModel.getValue()
       })
 
@@ -154,6 +163,88 @@
     }
   }
 
+  const Compiler = (tree, file) => {
+    let result = ''
+    let metadata = []
+    let currentLine = 1
+
+    visitor(tree)
+
+    function visitChildren (node) {
+      if (node.children) {
+        node.children.forEach(x => visitor(x))
+      }
+    }
+
+    function visitor (node) {
+      switch (node.type) {
+        case 'link':
+          const textNode = node.children.find(x => x.type === 'text')
+
+          metadata.push({
+            type: 'decoration',
+            start: {
+              line: currentLine,
+              column: textNode.position.start.column - 1
+            },
+            end: {
+              line: currentLine + textNode.position.end.line - textNode.position.start.line,
+              column: textNode.position.end.column - 1
+            },
+            url: node.url,
+            text: textNode.value
+          })
+
+          currentLine += node.position.end.line - textNode.position.end.line
+          visitChildren(node)
+          break
+
+        case 'text':
+          result += node.value
+          visitChildren(node)
+          break
+
+        case 'paragraph':
+          visitChildren(node)
+          result += '\r\n\r\n'
+          currentLine += 2
+          break
+
+        case 'listItem':
+          result += '- '
+          visitChildren(node)
+          break
+
+        case 'heading':
+          visitChildren(node)
+          result += '\r\n'
+          currentLine++
+          break
+
+        case 'image':
+          metadata.push({
+            type: 'widget',
+            lineNumber: currentLine,
+            url: node.url
+          })
+          result += '\r\n'
+          currentLine++
+          break
+
+        default:
+          visitChildren(node)
+      }
+    }
+
+    file.metadata = metadata
+
+    return result
+  }
+
+  function stringify (options) {
+    this.Compiler = Compiler
+  }
+
   export default {
     name: 'editor',
     components: { NavbarGoBackButton, MarkdownHeader, MarkdownImage, MarkdownLink, PostsMenuItem, Publish },
@@ -166,7 +257,8 @@
         selection: {},
         monaco: {},
         editor: {},
-        editorModel: undefined
+        editorModel: undefined,
+        isMarkdown: true
       }
     },
     computed: {
@@ -189,7 +281,7 @@
           this.editorModel.setValue(val)
         }
 
-        if (this.renaming) {
+        if (this.renaming || !this.isMarkdown) {
           return
         }
 
@@ -267,6 +359,124 @@
       },
       focusEditor: function () {
         document.getElementById('editor').getElementsByClassName('inputarea')[0].focus()
+      },
+      toggleMode: function () {
+        this.isMarkdown = !this.isMarkdown
+
+        if (!this.isMarkdown) {
+          console.log('now no markdown')
+          stringify.Compiler = Compiler
+
+          const stripFrontmatter = x => {
+            const start = x.indexOf('---')
+            const end = x.indexOf('---', start + 1)
+
+            return x.substring(end + 3)
+          }
+
+          const markdown = stripFrontmatter(this.editorModel.getValue())
+          const processor = unified()
+            .use(parse)
+            .use(stringify)
+
+          processor.process(markdown, (err, file) => {
+            console.log(err || file)
+            this.editorModel.setValue(file.contents)
+
+            let deltaDecorations = []
+
+            file.metadata
+              .filter(x => x.type === 'decoration')
+              .forEach(x => {
+                deltaDecorations.push({
+                  range: new this.monaco.Range(
+                    x.start.line,
+                    x.start.column,
+                    x.end.line,
+                    x.end.column),
+                  options: { inlineClassName: 'linkDecoration' }
+                })
+              })
+
+            const ids = this.editor.deltaDecorations([], deltaDecorations)
+            console.log(ids)
+
+            const that = this
+
+            file.metadata
+              .filter(x => x.type === 'widget')
+              .forEach(x => {
+                that.editor.changeViewZones(function (changeAccessor) {
+                  var domNode = document.createElement('div')
+                  domNode.style.background = 'lightgreen'
+                  changeAccessor.addZone({
+                    afterLineNumber: x.lineNumber,
+                    heightInLines: 3,
+                    domNode: domNode
+                  })
+                })
+
+                const contentWidget = {
+                  domNode: null,
+                  startLineNumber: x.lineNumber,
+                  startColumn: 0,
+                  index: 1,
+                  getId: function () {
+                    const id = this.startLineNumber + '-' + this.startColumn
+                    console.log(id)
+                    return id
+                  },
+                  getDomNode: function () {
+                    if (!this.domNode) {
+                      this.domNode = document.createElement('div')
+                      this.domNode.innerHTML = `<div id="mount-point` + this.index + `"></div>`
+                      this.domNode.style.background = 'grey'
+                    }
+
+                    return this.domNode
+                  },
+                  getPosition: function () {
+                    return {
+                      position: {
+                        lineNumber: this.startLineNumber,
+                        column: this.startColumn
+                      },
+                      preference: [that.monaco.editor.ContentWidgetPositionPreference.BELOW]
+                    }
+                  }
+                }
+
+                that.editor.addContentWidget(contentWidget)
+
+                const Profile = Vue.extend({
+                  template: `<div><input v-model="msg">
+                <button v-on:click="notify">Dispatch Event</button>
+                <img src="` + x.url + `"/></div>`,
+                  data: function () {
+                    return { msg: 'hello' }
+                  },
+                  methods: {
+                    notify: function () {
+                      if (this.msg.trim()) {
+                        this.$emit('child-msg', this.msg)
+                        this.msg = ''
+                      }
+                    }
+                  }
+                })
+
+                const mountPoint = document.getElementById('mount-point' + 1)
+                const mountedProfile = new Profile().$mount()
+                mountPoint.appendChild(mountedProfile.$el)
+
+                mountedProfile.$on('child-msg', function (msg) {
+                  alert(msg)
+                })
+              })
+          })
+        } else {
+          console.log('now markdown')
+        }
       }
     }
   }
@@ -285,5 +495,15 @@
 
 .section {
     padding: 0;
+}
+</style>
+
+<style>
+.linkDecoration {
+  color: red !important;
+	cursor: pointer;
+	text-decoration: underline;
+	font-weight: bold;
+	font-style: oblique;
 }
 </style>
